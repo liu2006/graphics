@@ -337,26 +337,58 @@ int main(void) {
     printf("\033[32m---> Success Create Swap Chain\033[0m\n");
     
     uint32_t imageCount;
-    vulkan->result = vkGetSwapchainImagesKHR(vulkan->device, vulkan->swapChain, &imageCount, NULL);
+    vulkan->result = vkGetSwapchainImagesKHR(vulkan->device, vulkan->swapChain,
+                                             &imageCount, NULL);
+    assert(vulkan->result == VK_SUCCESS);
     VkImage *swapChainImages = malloc(sizeof(*swapChainImages) * imageCount);
     vulkan->result = vkGetSwapchainImagesKHR(vulkan->device, vulkan->swapChain, &imageCount, swapChainImages);
     assert(vulkan->result == VK_SUCCESS);
     printf("\033[35m- Swap Chain Image Count: %u\033[0m\n", imageCount);
 
+    VkImageView *imageViews = malloc(sizeof(*imageViews) * imageCount);
+    VkImageViewCreateInfo imageViewCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .viewType = VK_IMAGE_VIEW_TYPE_2D,
+        .format = surfaceFormats[formatIndex].format,
+        .components = {.r = VK_COMPONENT_SWIZZLE_R,
+                       .g = VK_COMPONENT_SWIZZLE_G,
+                       .b = VK_COMPONENT_SWIZZLE_B,
+                       .a = VK_COMPONENT_SWIZZLE_A},
+        .subresourceRange = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                             .baseMipLevel = 0,
+                             .levelCount = 1,
+                             .baseArrayLayer = 0,
+                             .layerCount = 1}};
 
+    for (uint32_t i = 0; i < imageCount; ++i) {
+	imageViewCreateInfo.image = swapChainImages[i];
+    }
+
+    vulkan->result = vkCreateImageView(vulkan->device, &imageViewCreateInfo,
+                                       NULL, imageViews);
+    assert(vulkan->result == VK_SUCCESS);
+    printf("\033[32m-----> Success Create Image Views\033[0m\n");
+
+    
     while (glfwWindowShouldClose(window)) {
 	glfwPollEvents();
     }
-    
+
+    for (uint32_t i = 0; i < imageCount; ++i) {
+	vkDestroyImageView(vulkan->device, imageViews[i], NULL);
+    }
+    free(imageViews);
     free(swapChainImages);
-    free(surfaceFormats);
-    free(queueFamilyPropeties);
-    free(physicalDevices);
-    free(vulkan->extensionProperties);
     vkDestroySwapchainKHR(vulkan->device, vulkan->swapChain, NULL);
     vkDestroySurfaceKHR(vulkan->instance, vulkan->surface, NULL);
     vkDestroyDevice(vulkan->device, NULL);
     vkDestroyInstance(vulkan->instance, NULL);
+    free(surfaceFormats);
+    free(queueFamilyPropeties);
+    free(physicalDevices);
+    free(vulkan->extensionProperties);
     free(vulkan);
     glfwDestroyWindow(window);
     glfwTerminate();
