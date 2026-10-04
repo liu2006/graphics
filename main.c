@@ -257,18 +257,19 @@ int main(void) {
 
     assert(result == VK_SUCCESS);
     VkPresentModeKHR presentMode;
-    bool supportedFifo;
+    bool supportedFifo, supportedMailbox;
     for (uint32_t i = 0; i < presentModeCount; ++i) {
 	if (presentModes[i] == VK_PRESENT_MODE_FIFO_KHR) {
             presentMode = VK_PRESENT_MODE_FIFO_KHR;
             supportedFifo = true;
         }
         if (presentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
-	    presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+            presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+	    supportedMailbox = true;
 	    break;
         }
     }
-    assert(supportedFifo);
+    assert(supportedFifo || supportedMailbox);
     if (presentMode == VK_PRESENT_MODE_MAILBOX_KHR)
 	printf("\033[32m---> Usage Mailbox Present Mode\033[0m\n");
     else if (presentMode == VK_PRESENT_MODE_FIFO_KHR) {
