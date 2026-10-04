@@ -371,6 +371,19 @@ int main(void) {
     assert(vulkan->result == VK_SUCCESS);
     printf("\033[32m-----> Success Create Image Views\033[0m\n");
 
+    FILE *file = fopen("../slang.spv", "rb");
+    assert(file != NULL); 
+    printf("\033[32m-----> Success Open Shader File\033[0m\n");
+    fseek(file, 0, SEEK_END);
+    long int size = ftell(file);
+    assert(size);
+    printf("\033[35m- Shader File Size: %ld Byte\033[0m\n", size);
+    fseek(file, 0, SEEK_SET);
+    uint32_t *buffer = malloc((size_t)size);
+    assert(buffer);
+    fread(buffer, sizeof(uint32_t), size / sizeof(uint32_t), file);
+    fclose(file);
+    printf("\033[32m-----> Success Save Shader File\033[0m\n");
     
     while (glfwWindowShouldClose(window)) {
 	glfwPollEvents();
