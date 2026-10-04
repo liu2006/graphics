@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 typedef struct {
   char const **items;
@@ -37,33 +38,50 @@ vec.capacity *= 2;                                                             \
           continue;                                                            \
       }                                                                        \
     }                                                                          \
-  } while (0)
+    } while (0)
 
-int main(void) {
-    glfwInit();
+
+typedef struct {
+    uint32_t extensionCount;
+    VkExtensionProperties *extensionProperties;
+    VkResult result;
+    VkInstance instance;
+    VkPhysicalDevice physicalDevice;
+    VkDevice device;
+    VkSurfaceKHR surface;
+    VkSwapchainKHR swapChain;
+    VkQueue queue;
+} Vulkan;
+
+void *createWindow(void *arg) {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_REFRESH_RATE, 165);
+    *(GLFWwindow **)(arg) = glfwCreateWindow(800, 600, "glfw", NULL, NULL);
+    assert(arg);
+    printf("\033[32m-----> Success Create Window\033[0m\n");
+    return NULL;
+}
 
-    GLFWwindow *window = glfwCreateWindow(800, 600, "glfw", NULL, NULL);
-
+void *createInstance(void *arg) {
+    Vulkan *vulkan = arg;
     uint32_t glfwExtensionCount;
     const char **glfwExtensions =
 	glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-    uint32_t extensionCount;
-    VkResult result;
-    result = vkEnumerateInstanceExtensionProperties(NULL, &extensionCount, NULL);
-    VkExtensionProperties *extensionProperties = NULL;
-    extensionProperties = realloc(extensionProperties,
-                                  sizeof(*extensionProperties) * extensionCount);
-    assert(extensionProperties);
-    result = vkEnumerateInstanceExtensionProperties(NULL, &extensionCount,
-                                                    extensionProperties);
-    assert(result == VK_SUCCESS);
-
+    vulkan->result = vkEnumerateInstanceExtensionProperties(
+							    NULL, &vulkan->extensionCount, NULL);
+    assert(vulkan->result == VK_SUCCESS);
+    vulkan->extensionProperties =
+        realloc(vulkan->extensionProperties,
+                sizeof(*vulkan->extensionProperties) * vulkan->extensionCount);
+    assert(vulkan->extensionProperties);
+    vulkan->result = vkEnumerateInstanceExtensionProperties(
+							    NULL, &vulkan->extensionCount, vulkan->extensionProperties);
+    assert(vulkan->result == VK_SUCCESS);
     uint32_t supportedCount = 0;
-    CHECK_REQUIRED_EXTENSIONS(glfwExtensionCount, extensionCount, glfwExtensions,
-                              extensionProperties, supportedCount);
+    CHECK_REQUIRED_EXTENSIONS(glfwExtensionCount, vulkan->extensionCount, glfwExtensions,
+                              vulkan->extensionProperties, supportedCount);
     assert(supportedCount == glfwExtensionCount);
 
     VkApplicationInfo appInfo = {
@@ -81,25 +99,37 @@ int main(void) {
 	.enabledExtensionCount = glfwExtensionCount,
 	.ppEnabledExtensionNames = glfwExtensions};
 
-    VkInstance instance;
-    result = vkCreateInstance(&instanceInfo, NULL, &instance);
-    assert(result == VK_SUCCESS);
+    vulkan->result = vkCreateInstance(&instanceInfo, NULL, &vulkan->instance);
+    assert(vulkan->result == VK_SUCCESS);
     printf("\033[32m-----> Success Create Instance\033[0m\n");
+    return NULL;
+}
 
-    VkSurfaceKHR surface;
-    result = glfwCreateWindowSurface(instance, window, NULL, &surface);
-    assert(result == VK_SUCCESS);
+int main(void) {
+    glfwInit();
+    Vulkan *vulkan = malloc(sizeof(*vulkan));
+    GLFWwindow *window;
+    pthread_t windowThread;
+    pthread_create(&windowThread, NULL, createWindow, &window);
 
-    VkPhysicalDevice physicalDevice;
+    pthread_t instanceThread;
+    pthread_create(&instanceThread, NULL, createInstance, vulkan);
+
+    pthread_join(windowThread, NULL);
+    pthread_join(instanceThread, NULL);
+    vulkan->result = glfwCreateWindowSurface(vulkan->instance, window, NULL,
+                                             &vulkan->surface);
+    assert(vulkan->result == VK_SUCCESS);
+
     uint32_t physicalDeviceCount;
-    result = vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, NULL);
-    assert(result == VK_SUCCESS);
+    vulkan->result = vkEnumeratePhysicalDevices(vulkan->instance, &physicalDeviceCount, NULL);
+    assert(vulkan->result == VK_SUCCESS);
 
     VkPhysicalDevice *physicalDevices =
 	malloc(sizeof(*physicalDevices) * physicalDeviceCount);
-    result = vkEnumeratePhysicalDevices(instance, &physicalDeviceCount,
+    vulkan->result = vkEnumeratePhysicalDevices(vulkan->instance, &physicalDeviceCount,
 					physicalDevices);
-    assert(result == VK_SUCCESS);
+    assert(vulkan->result == VK_SUCCESS);
     printf("\033[32m-----> Success Found Physical Device\033[0m\n");
     printf("\033[35m- Physical Device Count: %u\033[0m\n", physicalDeviceCount);
     VkPhysicalDeviceFeatures features = {0};
@@ -108,23 +138,23 @@ int main(void) {
 	vkGetPhysicalDeviceFeatures(physicalDevices[i], &features);
         vkGetPhysicalDeviceProperties(physicalDevices[i], &properties);
         if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-            physicalDevice = physicalDevices[i];
+            vulkan->physicalDevice = physicalDevices[i];
             printf("\033[35m- [ x ] Physical Device Name: %s\033[0m\n",
 		   properties.deviceName);
             break;
         }
-        physicalDevice = physicalDevices[i];
+        vulkan->physicalDevice = physicalDevices[i];
         printf("\033[35m- [ X ] Physical Device Name: %s\033[0m\n",
                properties.deviceName);
     }
 
     uint32_t queueFamilyPropertyCount;
-    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice,
+    vkGetPhysicalDeviceQueueFamilyProperties(vulkan->physicalDevice,
                                              &queueFamilyPropertyCount, NULL);
     VkQueueFamilyProperties *queueFamilyPropeties =
 	malloc(sizeof(*queueFamilyPropeties) * queueFamilyPropertyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(
-					     physicalDevice, &queueFamilyPropertyCount, queueFamilyPropeties);
+					     vulkan->physicalDevice, &queueFamilyPropertyCount, queueFamilyPropeties);
 
     bool supportedGraphics;
     uint32_t graphicsIndex;
@@ -140,28 +170,28 @@ int main(void) {
     printf("\033[35m- Graphics Index: %u\033[0m\n", graphicsIndex);
 
     uint32_t deviceExtensionPropertyCount;
-    result = vkEnumerateDeviceExtensionProperties(
-						  physicalDevice, NULL, &deviceExtensionPropertyCount, NULL);
-    extensionProperties =
-	realloc(extensionProperties,
-		sizeof(*extensionProperties) * deviceExtensionPropertyCount);
+    vulkan->result = vkEnumerateDeviceExtensionProperties(
+						  vulkan->physicalDevice, NULL, &deviceExtensionPropertyCount, NULL);
+    vulkan->extensionProperties =
+	realloc(vulkan->extensionProperties,
+		sizeof(*vulkan->extensionProperties) * deviceExtensionPropertyCount);
 
-    result = vkEnumerateDeviceExtensionProperties(physicalDevice, NULL,
+    vulkan->result = vkEnumerateDeviceExtensionProperties(vulkan->physicalDevice, NULL,
                                                   &deviceExtensionPropertyCount,
-                                                  extensionProperties);
+                                                  vulkan->extensionProperties);
 
-    assert(result == VK_SUCCESS);
-    supportedCount = 0;
+    assert(vulkan->result == VK_SUCCESS);
+    uint32_t supportedCount = 0;
     const char *requiredDeviceExtensions[] = {"VK_KHR_swapchain"};
     uint32_t requiredDeviceExtensionCount =
 	sizeof(requiredDeviceExtensions) / sizeof(requiredDeviceExtensions[0]);
     CHECK_REQUIRED_EXTENSIONS(
 			      requiredDeviceExtensionCount, deviceExtensionPropertyCount,
-			      requiredDeviceExtensions, extensionProperties, supportedCount);
+			      requiredDeviceExtensions, vulkan->extensionProperties, supportedCount);
     assert(supportedCount == requiredDeviceExtensionCount);
     printf("\033[32m---> Physical Device Supported Swap Chain\033[0m\n");
 
-    VkDevice device;
+
     uint32_t queueCount;
     float queuePriority = 1.0f;
     VkDeviceQueueCreateInfo queueCreateInfo = {
@@ -201,27 +231,27 @@ int main(void) {
 	.ppEnabledExtensionNames = requiredDeviceExtensions,
 	.pEnabledFeatures = &features};
 
-    result = vkCreateDevice(physicalDevice, &deviceCreateInfo, NULL, &device);
-    assert(result == VK_SUCCESS);
+    vulkan->result = vkCreateDevice(vulkan->physicalDevice, &deviceCreateInfo, NULL, &vulkan->device);
+    assert(vulkan->result == VK_SUCCESS);
     printf("\033[32m---> Success Create Logic Device\033[0m\n");
-    VkQueue queue;
-    vkGetDeviceQueue(device, graphicsIndex, 0, &queue);
+
+    vkGetDeviceQueue(vulkan->device, graphicsIndex, 0, &vulkan->queue);
     printf("\033[32m---> Success Create Graphics Queue\033[0m\n");
 
     VkSurfaceCapabilitiesKHR surfaceCapabilities = {0};
-    result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface,
+    vulkan->result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vulkan->physicalDevice, vulkan->surface,
                                                        &surfaceCapabilities);
-    assert(result == VK_SUCCESS);
+    assert(vulkan->result == VK_SUCCESS);
     uint32_t surfaceFormatCount;
-    result = vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface,
+    vulkan->result = vkGetPhysicalDeviceSurfaceFormatsKHR(vulkan->physicalDevice, vulkan->surface,
                                                   &surfaceFormatCount, NULL);
-    assert(result == VK_SUCCESS);
+    assert(vulkan->result == VK_SUCCESS);
     VkSurfaceFormatKHR *surfaceFormats =
         malloc(sizeof(*surfaceFormats) * surfaceFormatCount);
 
-    result = vkGetPhysicalDeviceSurfaceFormatsKHR(
-						  physicalDevice, surface, &surfaceFormatCount, surfaceFormats);
-    assert(result == VK_SUCCESS);
+    vulkan->result = vkGetPhysicalDeviceSurfaceFormatsKHR(
+							  vulkan->physicalDevice, vulkan->surface, &surfaceFormatCount, surfaceFormats);
+    assert(vulkan->result == VK_SUCCESS);
     uint32_t formatIndex;
     bool supportedSrgb, supportedNonlinear;
     for (uint32_t i = 0; i < surfaceFormatCount; ++i) {
@@ -247,15 +277,15 @@ int main(void) {
     }
     
     uint32_t presentModeCount;
-    result = vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface,
+    vulkan->result = vkGetPhysicalDeviceSurfacePresentModesKHR(vulkan->physicalDevice, vulkan->surface,
                                                        &presentModeCount, NULL);
-    assert(result == VK_SUCCESS);        
+    assert(vulkan->result == VK_SUCCESS);        
     VkPresentModeKHR *presentModes =
         malloc(sizeof(*presentModes) * presentModeCount);
-    result = vkGetPhysicalDeviceSurfacePresentModesKHR(
-						       physicalDevice, surface, &presentModeCount, presentModes);
+    vulkan->result = vkGetPhysicalDeviceSurfacePresentModesKHR(
+						       vulkan->physicalDevice, vulkan->surface, &presentModeCount, presentModes);
 
-    assert(result == VK_SUCCESS);
+    assert(vulkan->result == VK_SUCCESS);
     VkPresentModeKHR presentMode;
     bool supportedFifo, supportedMailbox;
     for (uint32_t i = 0; i < presentModeCount; ++i) {
@@ -286,7 +316,7 @@ int main(void) {
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
         .pNext = NULL,
         .flags = 0,
-        .surface = surface,
+        .surface = vulkan->surface,
         .minImageCount = surfaceCapabilities.minImageCount,
         .imageFormat = surfaceFormats[formatIndex].format,
         .imageColorSpace = surfaceFormats[formatIndex].colorSpace,
@@ -301,18 +331,18 @@ int main(void) {
         .presentMode = presentMode,
         .clipped = true,
         .oldSwapchain = VK_NULL_HANDLE};
-    
-    VkSwapchainKHR swapChain;
-    result = vkCreateSwapchainKHR(device, &swapChainInfo, NULL, &swapChain);
-    assert(result == VK_SUCCESS);
+
+    vulkan->result = vkCreateSwapchainKHR(vulkan->device, &swapChainInfo, NULL, &vulkan->swapChain);
+    assert(vulkan->result == VK_SUCCESS);
     printf("\033[32m---> Success Create Swap Chain\033[0m\n");
     
     uint32_t imageCount;
-    result = vkGetSwapchainImagesKHR(device, swapChain, &imageCount, NULL);
+    vulkan->result = vkGetSwapchainImagesKHR(vulkan->device, vulkan->swapChain, &imageCount, NULL);
     VkImage *swapChainImages = malloc(sizeof(*swapChainImages) * imageCount);
-    result = vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages);
-    assert(result == VK_SUCCESS);
+    vulkan->result = vkGetSwapchainImagesKHR(vulkan->device, vulkan->swapChain, &imageCount, swapChainImages);
+    assert(vulkan->result == VK_SUCCESS);
     printf("\033[35m- Swap Chain Image Count: %u\033[0m\n", imageCount);
+
 
     while (glfwWindowShouldClose(window)) {
 	glfwPollEvents();
@@ -322,11 +352,12 @@ int main(void) {
     free(surfaceFormats);
     free(queueFamilyPropeties);
     free(physicalDevices);
-    free(extensionProperties);
-    vkDestroySwapchainKHR(device, swapChain, NULL);
-    vkDestroySurfaceKHR(instance, surface, NULL);
-    vkDestroyDevice(device, NULL);
-    vkDestroyInstance(instance, NULL);
+    free(vulkan->extensionProperties);
+    vkDestroySwapchainKHR(vulkan->device, vulkan->swapChain, NULL);
+    vkDestroySurfaceKHR(vulkan->instance, vulkan->surface, NULL);
+    vkDestroyDevice(vulkan->device, NULL);
+    vkDestroyInstance(vulkan->instance, NULL);
+    free(vulkan);
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;
