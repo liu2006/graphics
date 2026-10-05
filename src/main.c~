@@ -1,0 +1,47 @@
+#include "vulkan.h"
+
+int main(void) {
+    Vulkan *vulkan = calloc(1, sizeof(*vulkan));
+    glfwInit();
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_REFRESH_RATE, 165);
+    vulkan->window = glfwCreateWindow(800, 600, "glfw", NULL, NULL);
+    assert(vulkan->window);
+    printf("\033[32m-----> Success Create Window\033[0m\n");
+    
+    createInstance(vulkan);
+    vulkan->result = glfwCreateWindowSurface(vulkan->instance, vulkan->window, NULL,
+                                             &vulkan->surface);
+    assert(vulkan->result == VK_SUCCESS);
+    createPhysicalDevice(vulkan);
+    createDevice(vulkan);
+    createSwapChain(vulkan);
+    createPipeline(vulkan);
+    
+    FILE *file = fopen("../../slang.spv", "rb");
+    assert(file != NULL); 
+    printf("\033[32m-----> Success Open Shader File\033[0m\n");
+    fseek(file, 0, SEEK_END);
+    vulkan->spirvSize = ftell(file);
+    assert(vulkan->spirvSize);
+    printf("\033[35m- Shader File Size: %ld Byte\033[0m\n", vulkan->spirvSize);
+    fseek(file, 0, SEEK_SET);
+    vulkan->spirvBuffer = malloc((size_t)vulkan->spirvSize);
+    assert(vulkan->spirvBuffer);
+    fread(vulkan->spirvBuffer, sizeof(uint32_t), vulkan->spirvSize / sizeof(uint32_t), file);
+    fclose(file);
+    printf("\033[32m-----> Success Save Shader File\033[0m\n");
+
+    while (glfwWindowShouldClose(vulkan->window)) {
+	glfwPollEvents();
+    }
+    for (uint32_t i = 0; i < vulkan->imageCount; ++i) {
+	vkDestroyImageView(vulkan->device, vulkan->imageViews[i], NULL);
+    }
+    free(vulkan->imageViews);
+    cleanup_stack(vulkan);
+    terminate(vulkan);
+    return 0;
+}

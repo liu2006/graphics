@@ -1,0 +1,191 @@
+#include "vulkan.h"
+void createPipeline(Vulkan *vulkan) {
+    
+    FILE *file = fopen("../slang.spv", "rb");
+    assert(file != NULL); 
+    printf("\033[32m-----> Success Open Shader File\033[0m\n");
+    fseek(file, 0, SEEK_END);
+    vulkan->spirvSize = ftell(file);
+    assert(vulkan->spirvSize);
+    printf("\033[35m- Shader File Size: %ld Byte\033[0m\n", vulkan->spirvSize);
+    fseek(file, 0, SEEK_SET);
+    vulkan->spirvBuffer = malloc((size_t)vulkan->spirvSize);
+    assert(vulkan->spirvBuffer);
+    fread(vulkan->spirvBuffer, sizeof(uint32_t), vulkan->spirvSize / sizeof(uint32_t), file);
+    fclose(file);
+    printf("\033[32m-----> Success Save Shader File\033[0m\n");
+
+    VkShaderModuleCreateInfo shaderModuleInfo = {
+        .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .codeSize = (size_t)vulkan->spirvSize,
+        .pCode = vulkan->spirvBuffer};
+    vulkan->result = vkCreateShaderModule(vulkan->device, &shaderModuleInfo,
+                                          NULL, &vulkan->shaderModule);
+    assert(vulkan->result == VK_SUCCESS);
+    printf("\033[32m-----> Success Create Shader Module\033[0m\n");
+
+    VkPipelineShaderStageCreateInfo vertexShaderStageInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .stage = VK_SHADER_STAGE_VERTEX_BIT,
+        .module = vulkan->shaderModule,
+        .pName = "vertexMain",
+        .pSpecializationInfo = NULL};
+
+    VkPipelineShaderStageCreateInfo fragShaderStageInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+        .module = vulkan->shaderModule,
+        .pName = "fragMain",
+        .pSpecializationInfo = NULL};
+    VkPipelineShaderStageCreateInfo shaderStages[] = {vertexShaderStageInfo,
+                                                      fragShaderStageInfo};
+
+    VkViewport viewport = {.x = 0.0f,
+                           .y = 0.0f,
+                           .width = vulkan->extent.width,
+                           .height = vulkan->extent.height,
+                           .minDepth = 0.0f,
+                           .maxDepth = 1.0f};
+    VkRect2D scissor = {.offset = {.x = 0, .y = 0}, .extent = vulkan->extent};
+
+    VkPipelineViewportStateCreateInfo viewportCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .viewportCount = 1,
+        .pViewports = NULL,
+        .scissorCount = 1,
+        .pScissors = NULL};
+    
+    VkDynamicState dynamicStates[] = {VK_DYNAMIC_STATE_VIEWPORT,
+                                      VK_DYNAMIC_STATE_SCISSOR};
+    
+    struct VkPipelineDynamicStateCreateInfo dynamicStateInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .dynamicStateCount = sizeof(dynamicStates) / sizeof(dynamicStates[0]),
+        .pDynamicStates = dynamicStates};
+
+    VkPipelineVertexInputStateCreateInfo vertexInputInfo = {
+	.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+	.pNext = NULL,
+	.flags = 0,
+	.vertexBindingDescriptionCount = 0,
+	.pVertexBindingDescriptions = NULL,
+	.vertexAttributeDescriptionCount = 0,
+	.pVertexAttributeDescriptions = NULL
+    };
+    VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY,
+        .primitiveRestartEnable = VK_TRUE};
+
+    VkPipelineRasterizationStateCreateInfo rasterizationInfo = {
+        .sType =
+            VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .depthClampEnable = VK_FALSE,
+        .rasterizerDiscardEnable = VK_FALSE,
+        .polygonMode = VK_POLYGON_MODE_FILL,
+        .cullMode = VK_CULL_MODE_BACK_BIT,
+        .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+        .depthBiasEnable = VK_FALSE,
+        .depthBiasConstantFactor = 0.0f,
+        .depthBiasClamp = 0.0f,
+        .depthBiasSlopeFactor = 0.0f,
+        .lineWidth = 1.0f};
+
+    struct VkPipelineMultisampleStateCreateInfo multisampleInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
+        .sampleShadingEnable = VK_FALSE,
+        .minSampleShading = 0.0f,
+        .pSampleMask = 0,
+        .alphaToCoverageEnable = VK_FALSE,
+        .alphaToOneEnable = VK_FALSE};
+
+    VkPipelineColorBlendAttachmentState colorBlendAttachment = {
+        .blendEnable = VK_TRUE,
+        .srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
+        .dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA,
+        .colorBlendOp = VK_BLEND_OP_ADD,
+        .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
+        .dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
+        .alphaBlendOp = VK_BLEND_OP_ADD,
+        .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+            VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT};
+
+    VkPipelineColorBlendStateCreateInfo colorBlendCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .logicOpEnable = VK_FALSE,
+        .logicOp = VK_LOGIC_OP_COPY,
+        .attachmentCount = 1,
+        .pAttachments = &colorBlendAttachment,
+        .blendConstants = {0.0f, 0.0f, 0.0f, 0.0f}};
+
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .setLayoutCount = 0,
+        .pSetLayouts = NULL,
+        .pushConstantRangeCount = 0,
+        .pPushConstantRanges = NULL};
+
+    vulkan->result = vkCreatePipelineLayout(vulkan->device, &pipelineLayoutInfo,
+                                            NULL, &vulkan->pipelineLayout);
+    assert(vulkan->result == VK_SUCCESS);
+    printf("\033[32m-----> Success Create Pipeline Layout\033[0m\n");
+    
+    VkPipelineRenderingCreateInfo renderingInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
+        .pNext = NULL,
+        .viewMask = 0,
+        .colorAttachmentCount = 1,
+        .pColorAttachmentFormats = &vulkan->surfaceFormats[vulkan->formatIndex].format,
+        .depthAttachmentFormat = VK_FORMAT_UNDEFINED,
+        .stencilAttachmentFormat = VK_FORMAT_UNDEFINED};
+
+    VkGraphicsPipelineCreateInfo graphicsPipelineInfo = {
+        .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+        .pNext = &renderingInfo,
+        .flags = 0,
+        .stageCount = sizeof(shaderStages) / sizeof(shaderStages[0]),
+        .pStages = shaderStages,
+        .pVertexInputState = &vertexInputInfo,
+        .pInputAssemblyState = &inputAssemblyInfo,
+        .pTessellationState = NULL,
+        .pViewportState = &viewportCreateInfo,
+        .pRasterizationState = &rasterizationInfo,
+        .pMultisampleState = &multisampleInfo,
+        .pDepthStencilState = NULL,
+        .pColorBlendState = &colorBlendCreateInfo,
+        .pDynamicState = &dynamicStateInfo,
+        .layout = vulkan->pipelineLayout,
+        .renderPass = NULL,
+        .subpass = 0,
+        .basePipelineHandle = VK_NULL_HANDLE,
+        .basePipelineIndex = -1,
+    };
+
+    vulkan->result = vkCreateGraphicsPipelines(vulkan->device, VK_NULL_HANDLE,
+                                               1, &graphicsPipelineInfo, NULL,
+                                               &vulkan->graphicsPipeline);
+    assert(vulkan->result == VK_SUCCESS);
+    printf("\033[32m-----> Success Create Pipeline\033[0m\n");
+}
+ 
