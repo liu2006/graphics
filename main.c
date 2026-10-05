@@ -1,3 +1,4 @@
+#include <vulkan/vulkan_core.h>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <assert.h>
@@ -137,16 +138,15 @@ int main(void) {
     for (uint32_t i = 0; i < physicalDeviceCount; ++i) {
 	vkGetPhysicalDeviceFeatures(physicalDevices[i], &features);
         vkGetPhysicalDeviceProperties(physicalDevices[i], &properties);
+        printf("\033[35m- Supported Physical Device: %s\033[0m\n", properties.deviceName);
         if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
             vulkan->physicalDevice = physicalDevices[i];
-            printf("\033[35m- [ x ] Physical Device Name: %s\033[0m\n",
-		   properties.deviceName);
             break;
         }
         vulkan->physicalDevice = physicalDevices[i];
-        printf("\033[35m- [ X ] Physical Device Name: %s\033[0m\n",
-               properties.deviceName);
     }
+    vkGetPhysicalDeviceProperties(vulkan->physicalDevice, &properties);
+    printf("\033[34m- Select Physical Device [ %s ]\033[0m\n", properties.deviceName);    
 
     uint32_t queueFamilyPropertyCount;
     vkGetPhysicalDeviceQueueFamilyProperties(vulkan->physicalDevice,
@@ -155,7 +155,6 @@ int main(void) {
 	malloc(sizeof(*queueFamilyPropeties) * queueFamilyPropertyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(
 					     vulkan->physicalDevice, &queueFamilyPropertyCount, queueFamilyPropeties);
-
     bool supportedGraphics;
     uint32_t graphicsIndex;
     for (uint32_t i = 0; i < queueFamilyPropertyCount; ++i) {
@@ -190,7 +189,6 @@ int main(void) {
 			      requiredDeviceExtensions, vulkan->extensionProperties, supportedCount);
     assert(supportedCount == requiredDeviceExtensionCount);
     printf("\033[32m---> Physical Device Supported Swap Chain\033[0m\n");
-
 
     uint32_t queueCount;
     float queuePriority = 1.0f;
@@ -384,11 +382,143 @@ int main(void) {
     fread(buffer, sizeof(uint32_t), size / sizeof(uint32_t), file);
     fclose(file);
     printf("\033[32m-----> Success Save Shader File\033[0m\n");
+
+    VkShaderModule shaderModule;
+    VkShaderModuleCreateInfo shaderModuleInfo = {
+        .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .codeSize = (size_t)size,
+        .pCode = buffer};
+    vulkan->result = vkCreateShaderModule(vulkan->device, &shaderModuleInfo,
+                                          NULL, &shaderModule);
+    assert(vulkan->result == VK_SUCCESS);
+    printf("\033[32m-----> Success Create Shader Module\033[0m\n");
+
+    VkPipelineShaderStageCreateInfo vertexShaderStageInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .stage = VK_SHADER_STAGE_VERTEX_BIT,
+        .module = shaderModule,
+        .pName = "vertexMain",
+        .pSpecializationInfo = NULL};
+
+    VkPipelineShaderStageCreateInfo fragShaderStageInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+        .module = shaderModule,
+        .pName = "fragMain",
+        .pSpecializationInfo = NULL};
+    VkPipelineShaderStageCreateInfo shaderStages[] = {vertexShaderStageInfo,
+                                                      fragShaderStageInfo};
+
+    VkViewport viewport = {.x = 0.0f,
+                           .y = 0.0f,
+                           .width = extent.width,
+                           .height = extent.height,
+                           .minDepth = 0.0f,
+                           .maxDepth = 1.0f};
+    VkRect2D scissor = {.offset = {.x = 0, .y = 0}, .extent = extent};
+
+    VkPipelineViewportStateCreateInfo viewportCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .viewportCount = 1,
+        .pViewports = NULL,
+        .scissorCount = 1,
+        .pScissors = NULL};
     
+    VkDynamicState dynamicStates[] = {VK_DYNAMIC_STATE_VIEWPORT,
+                                      VK_DYNAMIC_STATE_SCISSOR};
+    
+    struct VkPipelineDynamicStateCreateInfo dynamicStateInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .dynamicStateCount = sizeof(dynamicStates) / sizeof(dynamicStates[0]),
+        .pDynamicStates = dynamicStates};
+
+    VkPipelineVertexInputStateCreateInfo vertexInputInfo;
+    VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY,
+        .primitiveRestartEnable = VK_TRUE};
+
+    VkPipelineRasterizationStateCreateInfo rasterizationInfo = {
+        .sType =
+            VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_LINE_STATE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .depthClampEnable = VK_FALSE,
+        .rasterizerDiscardEnable = VK_FALSE,
+        .polygonMode = VK_POLYGON_MODE_FILL,
+        .cullMode = VK_CULL_MODE_BACK_BIT,
+        .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+        .depthBiasEnable = VK_FALSE,
+        .depthBiasConstantFactor = 0.0f,
+        .depthBiasClamp = 0.0f,
+        .depthBiasSlopeFactor = 0.0f,
+        .lineWidth = 1.0f};
+
+    struct VkPipelineMultisampleStateCreateInfo multisampleInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
+        .sampleShadingEnable = VK_FALSE,
+        .minSampleShading = 0.0f,
+        .pSampleMask = 0,
+        .alphaToCoverageEnable = VK_FALSE,
+        .alphaToOneEnable = VK_FALSE};
+
+    VkPipelineColorBlendAttachmentState colorBlendAttachment = {
+        .blendEnable = VK_TRUE,
+        .srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
+        .dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA,
+        .colorBlendOp = VK_BLEND_OP_ADD,
+        .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
+        .dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
+        .alphaBlendOp = VK_BLEND_OP_ADD,
+        .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+            VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT};
+
+    VkPipelineColorBlendStateCreateInfo cololBlendCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .logicOpEnable = VK_FALSE,
+        .logicOp = VK_LOGIC_OP_COPY,
+        .attachmentCount = 1,
+        .pAttachments = &colorBlendAttachment,
+        .blendConstants = {0.0f, 0.0f, 0.0f, 0.0f}};
+
+    VkPipelineLayout pipelineLayout;
+    struct VkPipelineLayoutCreateInfo pipelineLayoutInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .setLayoutCount = 0,
+        .pSetLayouts = NULL,
+        .pushConstantRangeCount = 0,
+        .pPushConstantRanges = NULL};
+
+    vulkan->result = vkCreatePipelineLayout(vulkan->device, &pipelineLayoutInfo,
+                                            NULL, &pipelineLayout);
+    assert(vulkan->result == VK_SUCCESS);
+    printf("\033[32m-----> Success Create Pipeline Layout\033[0m\n");
+
     while (glfwWindowShouldClose(window)) {
 	glfwPollEvents();
     }
 
+    vkDestroyPipelineLayout(vulkan->device, pipelineLayout, NULL);    
+    vkDestroyShaderModule(vulkan->device, shaderModule, NULL);
     for (uint32_t i = 0; i < imageCount; ++i) {
 	vkDestroyImageView(vulkan->device, imageViews[i], NULL);
     }
