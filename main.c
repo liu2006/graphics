@@ -132,13 +132,12 @@ int main(void) {
 					physicalDevices);
     assert(vulkan->result == VK_SUCCESS);
     printf("\033[32m-----> Success Found Physical Device\033[0m\n");
-    printf("\033[35m- Physical Device Count: %u\033[0m\n", physicalDeviceCount);
     VkPhysicalDeviceFeatures features = {0};
     VkPhysicalDeviceProperties properties = {0};
     for (uint32_t i = 0; i < physicalDeviceCount; ++i) {
 	vkGetPhysicalDeviceFeatures(physicalDevices[i], &features);
         vkGetPhysicalDeviceProperties(physicalDevices[i], &properties);
-        printf("\033[35m- Supported Physical Device: %s\033[0m\n", properties.deviceName);
+        printf("\033[35m- [ %u ] Supported Physical Device: %s\033[0m\n", i + 1, properties.deviceName);
         if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
             vulkan->physicalDevice = physicalDevices[i];
             break;
