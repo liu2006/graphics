@@ -487,7 +487,7 @@ int main(void) {
         .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
             VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT};
 
-    VkPipelineColorBlendStateCreateInfo cololBlendCreateInfo = {
+    VkPipelineColorBlendStateCreateInfo colorBlendCreateInfo = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
         .pNext = NULL,
         .flags = 0,
@@ -511,6 +511,44 @@ int main(void) {
                                             NULL, &pipelineLayout);
     assert(vulkan->result == VK_SUCCESS);
     printf("\033[32m-----> Success Create Pipeline Layout\033[0m\n");
+    
+    VkPipelineRenderingCreateInfo renderingInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
+        .pNext = NULL,
+        .viewMask = 0,
+        .colorAttachmentCount = 1,
+        .pColorAttachmentFormats = &surfaceFormats[formatIndex].format,
+        .depthAttachmentFormat = VK_FORMAT_UNDEFINED,
+        .stencilAttachmentFormat = VK_FORMAT_UNDEFINED};
+
+    VkGraphicsPipelineCreateInfo graphicsPipelineInfo = {
+        .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+        .pNext = &renderingInfo,
+        .flags = 0,
+        .stageCount = sizeof(shaderStages) / sizeof(shaderStages[0]),
+        .pStages = shaderStages,
+        .pVertexInputState = &vertexInputInfo,
+        .pInputAssemblyState = &inputAssemblyInfo,
+        .pTessellationState = NULL,
+        .pViewportState = &viewportCreateInfo,
+        .pRasterizationState = &rasterizationInfo,
+        .pMultisampleState = &multisampleInfo,
+        .pDepthStencilState = NULL,
+        .pColorBlendState = &colorBlendCreateInfo,
+        .pDynamicState = &dynamicStateInfo,
+        .layout = pipelineLayout,
+        .renderPass = NULL,
+        .subpass = 0,
+        .basePipelineHandle = VK_NULL_HANDLE,
+        .basePipelineIndex = -1,
+    };
+
+    VkPipeline graphicsPipeline;
+    vulkan->result = vkCreateGraphicsPipelines(vulkan->device, VK_NULL_HANDLE,
+                                               1, &graphicsPipelineInfo, NULL,
+                                               &graphicsPipeline);
+    assert(vulkan->result == VK_SUCCESS);
+    printf("\033[32m-----> Success Create Pipeline\033[0m\n");
 
     while (glfwWindowShouldClose(window)) {
 	glfwPollEvents();
