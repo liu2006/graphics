@@ -105,7 +105,7 @@ void createPipeline(Vulkan *vulkan) {
         .depthBiasSlopeFactor = 0.0f,
         .lineWidth = 1.0f};
 
-    struct VkPipelineMultisampleStateCreateInfo multisampleInfo = {
+    VkPipelineMultisampleStateCreateInfo multisampleInfo = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
         .pNext = NULL,
         .flags = 0,

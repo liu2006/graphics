@@ -23,11 +23,6 @@ int main(void) {
     while (glfwWindowShouldClose(vulkan->window)) {
 	glfwPollEvents();
     }
-    for (uint32_t i = 0; i < vulkan->imageCount; ++i) {
-	vkDestroyImageView(vulkan->device, vulkan->imageViews[i], NULL);
-    }
-    free(vulkan->imageViews);
-    cleanup_stack(vulkan);
-    terminate(vulkan);
+    
     return 0;
 }

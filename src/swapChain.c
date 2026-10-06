@@ -11,7 +11,6 @@ void createSwapChain(Vulkan *vulkan) {
     assert(vulkan->result == VK_SUCCESS);
     vulkan->surfaceFormats =
         malloc(sizeof(*vulkan->surfaceFormats) * surfaceFormatCount);
-    auto_stack(&vulkan->stack, free, vulkan->surfaceFormats);
     vulkan->result = vkGetPhysicalDeviceSurfaceFormatsKHR(
 							  vulkan->physicalDevice, vulkan->surface, &surfaceFormatCount, vulkan->surfaceFormats);
     assert(vulkan->result == VK_SUCCESS);
@@ -26,48 +25,44 @@ void createSwapChain(Vulkan *vulkan) {
           vulkan->formatIndex = i;
       }
     }
-
     uint32_t presentModeCount;
     vulkan->result = vkGetPhysicalDeviceSurfacePresentModesKHR(
 							       vulkan->physicalDevice, vulkan->surface, &presentModeCount, NULL);
     assert(vulkan->result == VK_SUCCESS);
     VkPresentModeKHR *presentModes =
         malloc(sizeof(*presentModes) * presentModeCount);
-    auto_stack(&vulkan->stack, free, presentModes);
+    
     vulkan->result = vkGetPhysicalDeviceSurfacePresentModesKHR(
         vulkan->physicalDevice, vulkan->surface, &presentModeCount,
         presentModes);
     assert(vulkan->result == VK_SUCCESS);
-    
-    VkPresentModeKHR presentMode;
-    bool supportedFifo, supportedMailbox;
+
+    VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
+    bool supportedMailbox;
     for (uint32_t i = 0; i < presentModeCount; ++i) {
-	if (presentModes[i] == VK_PRESENT_MODE_FIFO_KHR) {
-            presentMode = VK_PRESENT_MODE_FIFO_KHR;
-            supportedFifo = true;
-        }
         if (presentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
             presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
-	    supportedMailbox = true;
-	    break;
+            supportedMailbox = true;
+            printf("\033[34m- Usage [ mailbox ] Present Mode\033[0m\n");
+            break;
         }
     }
-    assert(supportedFifo || supportedMailbox);
-    if (presentMode == VK_PRESENT_MODE_MAILBOX_KHR)
-	printf("\033[32m---> Usage Mailbox Present Mode\033[0m\n");
-    else if (presentMode == VK_PRESENT_MODE_FIFO_KHR) {
-        printf("\033[33m---> Usage Fifo Present Mode\033[0m\n");
-    }
+    if (!supportedMailbox)
+	printf("\033[33m- Usage [ fifo ] Present Mode\033[0m\n");
     int width, height;
     glfwGetFramebufferSize(vulkan->window, &width, &height);
     vulkan->extent.width = width;
     vulkan->extent.height = height;
+    if (surfaceCapabilities.minImageCount >= 2)
+	vulkan->imageCount = 2; else
+	vulkan->imageCount = surfaceCapabilities.minImageCount;
+    printf("\033[35m- Swap Chain Image Count: %u\033[0m\n", vulkan->imageCount);
     VkSwapchainCreateInfoKHR swapChainInfo = {
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
         .pNext = NULL,
         .flags = 0,
         .surface = vulkan->surface,
-        .minImageCount = surfaceCapabilities.minImageCount,
+        .minImageCount = vulkan->imageCount,
         .imageFormat = vulkan->surfaceFormats[vulkan->formatIndex].format,
         .imageColorSpace = vulkan->surfaceFormats[vulkan->formatIndex].colorSpace,
         .imageExtent = vulkan->extent,
@@ -84,17 +79,14 @@ void createSwapChain(Vulkan *vulkan) {
 
     vulkan->result = vkCreateSwapchainKHR(vulkan->device, &swapChainInfo, NULL, &vulkan->swapChain);
     assert(vulkan->result == VK_SUCCESS);
-    printf("\033[32m---> Success Create Swap Chain\033[0m\n");
+    printf("\033[32m-----> Success Create Swap Chain\033[0m\n");
 
     vulkan->result = vkGetSwapchainImagesKHR(vulkan->device, vulkan->swapChain,
                                              &vulkan->imageCount, NULL);
-    
     assert(vulkan->result == VK_SUCCESS);
     VkImage *swapChainImages = malloc(sizeof(*swapChainImages) * vulkan->imageCount);
-    auto_stack(&vulkan->stack, free, swapChainImages);
     vulkan->result = vkGetSwapchainImagesKHR(vulkan->device, vulkan->swapChain, &vulkan->imageCount, swapChainImages);
     assert(vulkan->result == VK_SUCCESS);
-    printf("\033[35m- Swap Chain Image Count: %u\033[0m\n", vulkan->imageCount);
     
     vulkan->imageViews = malloc(sizeof(*vulkan->imageViews) * vulkan->imageCount);
     VkImageViewCreateInfo imageViewCreateInfo = {
@@ -120,4 +112,6 @@ void createSwapChain(Vulkan *vulkan) {
 	assert(vulkan->result == VK_SUCCESS);
     }
     printf("\033[32m-----> Success Create Image Views\033[0m\n");
+    free(swapChainImages);
+    free(presentModes);
 }

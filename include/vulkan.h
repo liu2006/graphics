@@ -7,25 +7,11 @@
 #include <string.h>
 #include <pthread.h>
 
-typedef void (*CleanupFunc)(void *);
-
-typedef struct {
-    CleanupFunc func;
-    void *arg;
-} Cleanup;
-
-typedef struct {
-    Cleanup *items;
-    size_t count;
-    size_t capacity;
-} Stack;
-
 typedef struct {
     const char **items;
     size_t count;
     size_t capacity;
 } Extensions;
-
 
 typedef struct {
     GLFWwindow *window;
@@ -48,16 +34,12 @@ typedef struct {
     uint32_t *spirvBuffer;
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
-    
-    Stack stack;
 } Vulkan;
 
+    
 void createInstance(Vulkan *vulkan);
 void createPhysicalDevice(Vulkan *vulkan);
 void createDevice(Vulkan *vulkan);
 void createSwapChain(Vulkan *vulkan);
 void createPipeline(Vulkan *vulkan);
-void auto_stack(Stack *stack, CleanupFunc func, void *arg);
 void add_extensions(Extensions *extensions, const char *extension);
-void terminate(Vulkan *vulkan);
-void cleanup_stack(Vulkan *vulkan);

@@ -7,7 +7,6 @@ void createPhysicalDevice(Vulkan *vulkan) {
 
     VkPhysicalDevice *physicalDevices =
         malloc(sizeof(*physicalDevices) * physicalDeviceCount);
-    auto_stack(&vulkan->stack, free, physicalDevices);
     vulkan->result = vkEnumeratePhysicalDevices(vulkan->instance, &physicalDeviceCount,
 					physicalDevices);
     assert(vulkan->result == VK_SUCCESS);
@@ -33,7 +32,6 @@ void createPhysicalDevice(Vulkan *vulkan) {
                                              &queueFamilyPropertyCount, NULL);
     VkQueueFamilyProperties *queueFamilyProperties =
         malloc(sizeof(*queueFamilyProperties) * queueFamilyPropertyCount);
-    auto_stack(&vulkan->stack, free, queueFamilyProperties);
     vkGetPhysicalDeviceQueueFamilyProperties(
 					     vulkan->physicalDevice, &queueFamilyPropertyCount, queueFamilyProperties);
     bool supportedGraphics;
@@ -53,7 +51,6 @@ void createPhysicalDevice(Vulkan *vulkan) {
 						  vulkan->physicalDevice, NULL, &extensionPropertyCount, NULL);
     VkExtensionProperties *extensionProperties =
         malloc(sizeof(*extensionProperties) * extensionPropertyCount);
-    auto_stack(&vulkan->stack, free, extensionProperties);
     vulkan->result = vkEnumerateDeviceExtensionProperties(
         vulkan->physicalDevice, NULL, &extensionPropertyCount,
         extensionProperties);
@@ -73,5 +70,7 @@ void createPhysicalDevice(Vulkan *vulkan) {
     }
     assert(supportedCount == vulkan->requiredDeviceExtensions.count);
     printf("\033[32m---> Physical Device Supported Swap Chain\033[0m\n");
-
+    free(extensionProperties);
+    free(queueFamilyProperties);
+    free(physicalDevices);
 }

@@ -2,8 +2,8 @@
 
 void createSwapChain(Vulkan *vulkan) {
     VkSurfaceCapabilitiesKHR surfaceCapabilities;
-    vulkan->result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vulkan->physicalDevice, vulkan->surface,
-							       &surfaceCapabilities);
+    vulkan->result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+							       vulkan->physicalDevice, vulkan->surface, &surfaceCapabilities);
     assert(vulkan->result == VK_SUCCESS);
     uint32_t surfaceFormatCount;
     vulkan->result = vkGetPhysicalDeviceSurfaceFormatsKHR(vulkan->physicalDevice, vulkan->surface,

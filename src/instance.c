@@ -10,7 +10,6 @@ void createInstance(Vulkan *vulkan) {
     assert(vulkan->result == VK_SUCCESS);
     VkExtensionProperties *extensionProperties =
         malloc(sizeof(*extensionProperties) * extensionCount);
-    auto_stack(&vulkan->stack, free, extensionProperties);
     vulkan->result = vkEnumerateInstanceExtensionProperties(
 							    NULL, &extensionCount, extensionProperties);
     assert(vulkan->result == VK_SUCCESS);
@@ -48,4 +47,5 @@ void createInstance(Vulkan *vulkan) {
     vulkan->result = vkCreateInstance(&instanceInfo, NULL, &vulkan->instance);
     assert(vulkan->result == VK_SUCCESS);
     printf("\033[32m-----> Success Create Instance\033[0m\n");
+    free(extensionProperties);
 }
