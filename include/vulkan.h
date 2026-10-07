@@ -45,10 +45,10 @@ typedef struct {
     VkCommandPool commandPool;
     VkCommandBuffer *commandBuffers;
     uint32_t commandBufferCount;
-    VkSemaphore presentSemaphore;
-    VkSemaphore renderSemaphore;
-    VkFence fence;
-
+    VkSemaphore *presentSemaphores;
+    VkSemaphore *renderSemaphores;
+    VkFence *fences;
+    uint32_t frameIndex;
 } Vulkan;
 
 void createInstance(Vulkan *vulkan);

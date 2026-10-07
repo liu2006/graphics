@@ -25,64 +25,74 @@ int main(void) {
         .pNext = NULL,
         .commandPool = vulkan->commandPool,
         .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-        .commandBufferCount = 1};
+        .commandBufferCount = 2};
     vulkan->result = vkAllocateCommandBuffers(
 					      vulkan->device, &commandBufferAllocateInfo, vulkan->commandBuffers);
-
     VkSemaphoreCreateInfo semaphoreInfo = {
         .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
         .pNext = NULL,
         .flags = 0};
-    vulkan->result = vkCreateSemaphore(vulkan->device, &semaphoreInfo, NULL,
-                                       &vulkan->presentSemaphore);
-    assert(vulkan->result == VK_SUCCESS);
-    vulkan->result = vkCreateSemaphore(vulkan->device, &semaphoreInfo, NULL,
-                                       &vulkan->renderSemaphore);
-    assert(vulkan->result == VK_SUCCESS);
-    
     VkFenceCreateInfo fenceInfo = {
 	.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
         .pNext = NULL,
 	.flags = VK_FENCE_CREATE_SIGNALED_BIT
     };
-    vulkan->result = vkCreateFence(vulkan->device, &fenceInfo, NULL,
-                                   &vulkan->fence);
+    vulkan->presentSemaphores =
+        malloc(sizeof(*vulkan->presentSemaphores) * vulkan->imageCount);
+    vulkan->renderSemaphores =
+        malloc(sizeof(*vulkan->renderSemaphores) * vulkan->imageCount);
+    vulkan->fences =
+        malloc(sizeof(*vulkan->fences) * vulkan->imageCount);
+
+    for (uint32_t i = 0; i < vulkan->imageCount; ++i) {
+	vulkan->result = vkCreateSemaphore(vulkan->device, &semaphoreInfo, NULL,
+					   &vulkan->presentSemaphores[i]);
+	assert(vulkan->result == VK_SUCCESS);
+	vulkan->result = vkCreateSemaphore(vulkan->device, &semaphoreInfo, NULL,
+					   &vulkan->renderSemaphores[i]);
+        assert(vulkan->result == VK_SUCCESS);
+        vulkan->result = vkCreateFence(vulkan->device, &fenceInfo, NULL,
+                                       &vulkan->fences[i]);
+    }
     assert(vulkan->result == VK_SUCCESS);
     
+    vulkan->frameIndex = 0;
     while (!glfwWindowShouldClose(vulkan->window)) {
-        vulkan->result = vkWaitForFences(vulkan->device, 1, &vulkan->fence,
+        vulkan->result = vkWaitForFences(vulkan->device, 1, &vulkan->fences[vulkan->frameIndex],
                                          VK_TRUE, UINT64_MAX);
         assert(vulkan->result == VK_SUCCESS);
-        vulkan->result = vkResetFences(vulkan->device, 1, &vulkan->fence);
+        vulkan->result = vkResetFences(vulkan->device, 1, &vulkan->fences[vulkan->frameIndex]);
         assert(vulkan->result == VK_SUCCESS);
-
-        vulkan->result = vkAcquireNextImageKHR(
-            vulkan->device, vulkan->swapChain, UINT64_MAX,
-            vulkan->presentSemaphore, VK_NULL_HANDLE, &vulkan->imageIndex);
-        
+        vulkan->result =
+            vkAcquireNextImageKHR(vulkan->device, vulkan->swapChain, UINT64_MAX,
+                                  vulkan->presentSemaphores[vulkan->frameIndex],
+                                  VK_NULL_HANDLE, &vulkan->imageIndex);
+        assert(vulkan->result == VK_SUCCESS);
+        vulkan->result =
+            vkResetCommandBuffer(vulkan->commandBuffers[vulkan->frameIndex], 0);
+        assert(vulkan->result == VK_SUCCESS);
         recordCommandBuffer(vulkan);
-        assert(vulkan->result == VK_SUCCESS);
 
 	VkPipelineStageFlagBits waitDstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         VkSubmitInfo submitInfo = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
                                    .pNext = NULL,
                                    .waitSemaphoreCount = 1,
-                                   .pWaitSemaphores = &vulkan->presentSemaphore,
+                                   .pWaitSemaphores = &vulkan->presentSemaphores[vulkan->frameIndex],
                                    .pWaitDstStageMask = &waitDstStageMask,
                                    .commandBufferCount = 1,
-                                   .pCommandBuffers = vulkan->commandBuffers,
+                                   .pCommandBuffers = &vulkan->commandBuffers[vulkan->frameIndex],
                                    .signalSemaphoreCount = 1,
                                    .pSignalSemaphores =
-                                       &vulkan->renderSemaphore};
+                                       &vulkan->renderSemaphores[vulkan->imageIndex]};
         vulkan->result =
-            vkQueueSubmit(vulkan->queue, 1, &submitInfo, vulkan->fence);
+            vkQueueSubmit(vulkan->queue, 1, &submitInfo, vulkan->fences[vulkan->frameIndex]);
         assert(vulkan->result == VK_SUCCESS);
         
         VkPresentInfoKHR presentInfo = {
             .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
             .pNext = NULL,
             .waitSemaphoreCount = 1,
-            .pWaitSemaphores = &vulkan->renderSemaphore,
+            .pWaitSemaphores = &vulkan->renderSemaphores[vulkan->imageIndex],
             .swapchainCount = 1,
             .pSwapchains = &vulkan->swapChain,
             .pImageIndices = &vulkan->imageIndex,
@@ -90,6 +100,7 @@ int main(void) {
         };
         vulkan->result = vkQueuePresentKHR(vulkan->queue, &presentInfo);
         assert(vulkan->result == VK_SUCCESS);
+        vulkan->frameIndex = (vulkan->frameIndex + 1) % vulkan->imageCount;
         glfwPollEvents();
     }
     printf("\033[36m-----> Program Exited Success\033[0m\n");
