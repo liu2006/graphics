@@ -4,7 +4,7 @@ void createPipeline(Vulkan *vulkan) {
     
     FILE *file = fopen("../shaders/slang.spv", "rb");
     assert(file != NULL); 
-    printf("\033[32m-----> Success Open Shader File\033[0m\n");
+    printf("\033[32m-----> Success Opened Shader File\033[0m\n");
     fseek(file, 0, SEEK_END);
     vulkan->spirvSize = ftell(file);
     assert(vulkan->spirvSize);
@@ -14,7 +14,7 @@ void createPipeline(Vulkan *vulkan) {
     assert(vulkan->spirvBuffer);
     fread(vulkan->spirvBuffer, sizeof(uint32_t), vulkan->spirvSize / sizeof(uint32_t), file);
     fclose(file);
-    printf("\033[32m-----> Success Save Shader File\033[0m\n");
+    printf("\033[32m-----> Success Loaded Shader File\033[0m\n");
 
     VkShaderModuleCreateInfo shaderModuleInfo = {
         .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
@@ -25,7 +25,6 @@ void createPipeline(Vulkan *vulkan) {
     vulkan->result = vkCreateShaderModule(vulkan->device, &shaderModuleInfo,
                                           NULL, &vulkan->shaderModule);
     assert(vulkan->result == VK_SUCCESS);
-    printf("\033[32m-----> Success Create Shader Module\033[0m\n");
 
     VkPipelineShaderStageCreateInfo vertexShaderStageInfo = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
@@ -46,7 +45,6 @@ void createPipeline(Vulkan *vulkan) {
         .pSpecializationInfo = NULL};
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertexShaderStageInfo,
                                                       fragShaderStageInfo};
-
 
     VkPipelineViewportStateCreateInfo viewportCreateInfo = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
@@ -143,8 +141,7 @@ void createPipeline(Vulkan *vulkan) {
     vulkan->result = vkCreatePipelineLayout(vulkan->device, &pipelineLayoutInfo,
                                             NULL, &vulkan->pipelineLayout);
     assert(vulkan->result == VK_SUCCESS);
-    printf("\033[32m-----> Success Create Pipeline Layout\033[0m\n");
-    
+
     VkPipelineRenderingCreateInfo renderingInfo = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
         .pNext = NULL,
@@ -180,6 +177,6 @@ void createPipeline(Vulkan *vulkan) {
                                                1, &graphicsPipelineInfo, NULL,
                                                &vulkan->graphicsPipeline);
     assert(vulkan->result == VK_SUCCESS);
-    printf("\033[32m-----> Success Create Pipeline\033[0m\n");
+    printf("\033[32m-----> Success Created Pipeline\033[0m\n");
 }
  

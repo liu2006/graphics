@@ -33,7 +33,7 @@ typedef struct {
     VkDeviceMemory msaaImageMemory;
     VkImageView msaaImageView;
     VkImageView *imageViews;
-    uint32_t msaaSamples;
+    VkSampleCountFlagBits msaaSample;
     VkSwapchainKHR swapChain;
     VkShaderModule shaderModule;
     long int spirvSize;

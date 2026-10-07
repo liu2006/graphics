@@ -25,15 +25,26 @@ void createPhysicalDevice(Vulkan *vulkan) {
         vulkan->physicalDevice = physicalDevices[i];
     }
     vkGetPhysicalDeviceProperties(vulkan->physicalDevice, &properties);
-    printf("\033[34m- Select Physical Device [ %s ]\033[0m\n",
+    printf("\033[34m- Selected Physical Device [ %s ]\033[0m\n",
            properties.deviceName);
-    VkSampleCountFlags sampleCount =
+    VkSampleCountFlags samples =
         properties.limits.framebufferColorSampleCounts &
             properties.limits.framebufferDepthSampleCounts;
-    vulkan->msaaSamples = (sampleCount / 2) + (sampleCount % 2);
-    printf("\033[34m- Maximum Supported Multiple Sample [ %u ] MSAA\033[0m\n",
-           vulkan->msaaSamples);
-
+    if (samples & VK_SAMPLE_COUNT_64_BIT)
+	vulkan->msaaSample = VK_SAMPLE_COUNT_64_BIT;
+    else if (samples & VK_SAMPLE_COUNT_32_BIT)
+	vulkan->msaaSample = VK_SAMPLE_COUNT_32_BIT;
+    else if (samples & VK_SAMPLE_COUNT_16_BIT)
+	vulkan->msaaSample = VK_SAMPLE_COUNT_16_BIT;
+    else if (samples & VK_SAMPLE_COUNT_8_BIT)
+	vulkan->msaaSample = VK_SAMPLE_COUNT_8_BIT;
+    else if (samples & VK_SAMPLE_COUNT_4_BIT)
+	vulkan->msaaSample = VK_SAMPLE_COUNT_4_BIT;
+    else if (samples & VK_SAMPLE_COUNT_2_BIT)
+	vulkan->msaaSample = VK_SAMPLE_COUNT_2_BIT;
+    else vulkan->msaaSample = VK_SAMPLE_COUNT_1_BIT;
+    printf("\033[34m- Selected MSAA Sample [ %u x MSAA ]\033[0m\n",
+           vulkan->msaaSample);
     
     uint32_t queueFamilyPropertyCount;
     vkGetPhysicalDeviceQueueFamilyProperties(vulkan->physicalDevice,
@@ -51,8 +62,7 @@ void createPhysicalDevice(Vulkan *vulkan) {
 	}
     }
     assert(supportedGraphics);
-    printf("\033[32m-----> Queue Family Supported Graphics\033[0m\n");
-    printf("\033[35m- Graphics Index: %u\033[0m\n", vulkan->graphicsIndex);
+    printf("\033[32m-----> Supported Graphics Queue Family\033[0m\n");
 
     uint32_t extensionPropertyCount;
     vulkan->result = vkEnumerateDeviceExtensionProperties(
@@ -77,7 +87,7 @@ void createPhysicalDevice(Vulkan *vulkan) {
         }
     }
     assert(supportedCount == vulkan->requiredDeviceExtensions.count);
-    printf("\033[32m---> Physical Device Supported Swap Chain\033[0m\n");
+    printf("\033[32m-----> Physical Device Supported Swap Chain\033[0m\n");
     free(extensionProperties);
     free(queueFamilyProperties);
     free(physicalDevices);

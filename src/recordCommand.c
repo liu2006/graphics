@@ -12,7 +12,7 @@ void recordCommandBuffer(Vulkan *vulkan) {
                                           &commandBufferBeginInfo);
     assert(vulkan->result == VK_SUCCESS);
 
-    VkImageMemoryBarrier2 barriers[2] = {
+    VkImageMemoryBarrier2 barrierStart[2] = {
         {
             .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
             .pNext = NULL,
@@ -61,7 +61,7 @@ void recordCommandBuffer(Vulkan *vulkan) {
         .bufferMemoryBarrierCount = 0,
         .pBufferMemoryBarriers = NULL,
         .imageMemoryBarrierCount = 2,
-        .pImageMemoryBarriers = barriers};
+        .pImageMemoryBarriers = barrierStart};
     vkCmdPipelineBarrier2(vulkan->commandBuffers[0], &dependencyInfo);
 
     VkRenderingAttachmentInfo renderingAttachmentInfo = {
@@ -111,7 +111,7 @@ void recordCommandBuffer(Vulkan *vulkan) {
     vkCmdDraw(vulkan->commandBuffers[0], 3, 1, 0, 0);
     vkCmdEndRendering(vulkan->commandBuffers[0]);
 
-    VkImageMemoryBarrier2 barrier2 = {
+    VkImageMemoryBarrier2 barrierEnd = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
         .pNext = NULL,
         .srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
@@ -138,7 +138,7 @@ void recordCommandBuffer(Vulkan *vulkan) {
                                         .bufferMemoryBarrierCount = 0,
                                         .pBufferMemoryBarriers = NULL,
                                         .imageMemoryBarrierCount = 1,
-                                        .pImageMemoryBarriers = &barrier2};
+                                        .pImageMemoryBarriers = &barrierEnd};
     
     vkCmdPipelineBarrier2(vulkan->commandBuffers[0], &dependencyInfo2);
     vulkan->result = vkEndCommandBuffer(vulkan->commandBuffers[0]);

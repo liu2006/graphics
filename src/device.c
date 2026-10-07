@@ -45,9 +45,9 @@ void createDevice(Vulkan *vulkan) {
 
     vulkan->result = vkCreateDevice(vulkan->physicalDevice, &deviceCreateInfo, NULL, &vulkan->device);
     assert(vulkan->result == VK_SUCCESS);
-    printf("\033[32m---> Success Create Logic Device\033[0m\n");
+    printf("\033[32m-----> Success Created Logic Device\033[0m\n");
 
     vkGetDeviceQueue(vulkan->device, vulkan->graphicsIndex, 0, &vulkan->queue);
-    printf("\033[32m---> Success Create Graphics Queue\033[0m\n");
+    printf("\033[32m-----> Success Created Graphics Queue\033[0m\n");
 
 }

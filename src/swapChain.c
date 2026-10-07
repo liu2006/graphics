@@ -113,7 +113,6 @@ void createSwapChain(Vulkan *vulkan) {
 					   NULL, &vulkan->imageViews[i]);
 	assert(vulkan->result == VK_SUCCESS);
     }
-    printf("\033[32m-----> Success Create Image Views\033[0m\n");
 
     VkImageCreateInfo msaaImageInfo = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
@@ -136,16 +135,15 @@ void createSwapChain(Vulkan *vulkan) {
 
     vulkan->result =
         vkCreateImage(vulkan->device, &msaaImageInfo, NULL, &vulkan->msaaImage);
-
+    assert(vulkan->result == VK_SUCCESS);
+    
     VkMemoryRequirements memoryRequirements;
-
     vkGetImageMemoryRequirements(vulkan->device, vulkan->msaaImage,
                                  &memoryRequirements);
-
+    
     VkPhysicalDeviceMemoryProperties memoryProperties;
     vkGetPhysicalDeviceMemoryProperties(vulkan->physicalDevice,
                                         &memoryProperties);
-
     uint32_t memoryTypeIndex;
     for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i) {
       if (memoryProperties.memoryTypes[i].propertyFlags &
@@ -165,10 +163,11 @@ void createSwapChain(Vulkan *vulkan) {
     };
     vulkan->result = vkAllocateMemory(vulkan->device, &allocateInfo,
                                       NULL, &vulkan->msaaImageMemory);
-
+    assert(vulkan->result == VK_SUCCESS);
+    
     vulkan->result = vkBindImageMemory(vulkan->device, vulkan->msaaImage,
                                        vulkan->msaaImageMemory, 0);
-    
+    assert(vulkan->result == VK_SUCCESS);
     VkImageViewCreateInfo msaaImageViewInfo = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         .pNext = NULL,
@@ -188,7 +187,6 @@ void createSwapChain(Vulkan *vulkan) {
     
     vulkan->result = vkCreateImageView(vulkan->device, &msaaImageViewInfo, NULL,
                                        &vulkan->msaaImageView);
-    
     assert(vulkan->result == VK_SUCCESS);
     free(presentModes);
 }

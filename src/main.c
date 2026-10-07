@@ -26,7 +26,6 @@ int main(void) {
         .commandPool = vulkan->commandPool,
         .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
         .commandBufferCount = 1};
-
     vulkan->result = vkAllocateCommandBuffers(
 					      vulkan->device, &commandBufferAllocateInfo, vulkan->commandBuffers);
 
@@ -51,7 +50,6 @@ int main(void) {
     assert(vulkan->result == VK_SUCCESS);
     
     while (!glfwWindowShouldClose(vulkan->window)) {
-
         vulkan->result = vkWaitForFences(vulkan->device, 1, &vulkan->fence,
                                          VK_TRUE, UINT64_MAX);
         assert(vulkan->result == VK_SUCCESS);
@@ -94,5 +92,6 @@ int main(void) {
         assert(vulkan->result == VK_SUCCESS);
         glfwPollEvents();
     }
+    printf("\033[36m-----> Program Exited Success\033[0m\n");
     return 0;
 }
