@@ -1,4 +1,5 @@
 #include "vulkan.h"
+#include "vulkan/vulkan_core.h"
 
 void createSwapChain(Vulkan *vulkan) {
     VkSurfaceCapabilitiesKHR surfaceCapabilities;
@@ -57,6 +58,7 @@ void createSwapChain(Vulkan *vulkan) {
 	vulkan->imageCount = 2; else
 	vulkan->imageCount = surfaceCapabilities.minImageCount;
     printf("\033[35m- Swap Chain Image Count: %u\033[0m\n", vulkan->imageCount);
+
     VkSwapchainCreateInfoKHR swapChainInfo = {
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
         .pNext = NULL,
@@ -84,8 +86,8 @@ void createSwapChain(Vulkan *vulkan) {
     vulkan->result = vkGetSwapchainImagesKHR(vulkan->device, vulkan->swapChain,
                                              &vulkan->imageCount, NULL);
     assert(vulkan->result == VK_SUCCESS);
-    VkImage *swapChainImages = malloc(sizeof(*swapChainImages) * vulkan->imageCount);
-    vulkan->result = vkGetSwapchainImagesKHR(vulkan->device, vulkan->swapChain, &vulkan->imageCount, swapChainImages);
+    vulkan->swapChainImages = malloc(sizeof(*vulkan->swapChainImages) * vulkan->imageCount);
+    vulkan->result = vkGetSwapchainImagesKHR(vulkan->device, vulkan->swapChain, &vulkan->imageCount, vulkan->swapChainImages);
     assert(vulkan->result == VK_SUCCESS);
     
     vulkan->imageViews = malloc(sizeof(*vulkan->imageViews) * vulkan->imageCount);
@@ -106,12 +108,87 @@ void createSwapChain(Vulkan *vulkan) {
                              .layerCount = 1}};
 
     for (uint32_t i = 0; i < vulkan->imageCount; ++i) {
-	imageViewCreateInfo.image = swapChainImages[i];
+	imageViewCreateInfo.image = vulkan->swapChainImages[i];
 	vulkan->result = vkCreateImageView(vulkan->device, &imageViewCreateInfo,
 					   NULL, &vulkan->imageViews[i]);
 	assert(vulkan->result == VK_SUCCESS);
     }
     printf("\033[32m-----> Success Create Image Views\033[0m\n");
-    free(swapChainImages);
+
+    VkImageCreateInfo msaaImageInfo = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .imageType = VK_IMAGE_TYPE_2D,
+        .format = vulkan->surfaceFormats[vulkan->formatIndex].format,
+        .extent = {.width = vulkan->extent.width,
+                   .height = vulkan->extent.height,
+                   .depth = 1},
+        .mipLevels = 1,
+        .arrayLayers = 1,
+        .samples = VK_SAMPLE_COUNT_8_BIT,
+        .tiling = VK_IMAGE_TILING_OPTIMAL,
+        .usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        .queueFamilyIndexCount = 0,
+        .pQueueFamilyIndices = NULL,
+        .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED};
+
+    vulkan->result =
+        vkCreateImage(vulkan->device, &msaaImageInfo, NULL, &vulkan->msaaImage);
+
+    VkMemoryRequirements memoryRequirements;
+
+    vkGetImageMemoryRequirements(vulkan->device, vulkan->msaaImage,
+                                 &memoryRequirements);
+
+    VkPhysicalDeviceMemoryProperties memoryProperties;
+    vkGetPhysicalDeviceMemoryProperties(vulkan->physicalDevice,
+                                        &memoryProperties);
+
+    uint32_t memoryTypeIndex;
+    for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i) {
+      if (memoryProperties.memoryTypes[i].propertyFlags &
+          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) {
+          memoryTypeIndex = i;
+          break;
+      } 
+    }
+    assert(memoryProperties.memoryTypes[memoryTypeIndex].propertyFlags &
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+    VkMemoryAllocateInfo allocateInfo = {
+        .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+        .pNext = NULL,
+        .allocationSize = memoryRequirements.size,
+        .memoryTypeIndex = memoryTypeIndex,
+    };
+    vulkan->result = vkAllocateMemory(vulkan->device, &allocateInfo,
+                                      NULL, &vulkan->msaaImageMemory);
+
+    vulkan->result = vkBindImageMemory(vulkan->device, vulkan->msaaImage,
+                                       vulkan->msaaImageMemory, 0);
+    
+    VkImageViewCreateInfo msaaImageViewInfo = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .image = vulkan->msaaImage,
+        .viewType = VK_IMAGE_VIEW_TYPE_2D,
+        .format = vulkan->surfaceFormats[vulkan->formatIndex].format,
+        .components = {.r = VK_COMPONENT_SWIZZLE_R,
+                       .g = VK_COMPONENT_SWIZZLE_G,
+                       .b = VK_COMPONENT_SWIZZLE_B,
+                       .a = VK_COMPONENT_SWIZZLE_A},
+        .subresourceRange = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                             .baseMipLevel = 0,
+                             .levelCount = 1,
+                             .baseArrayLayer = 0,
+                             .layerCount = 1}};
+    
+    vulkan->result = vkCreateImageView(vulkan->device, &msaaImageViewInfo, NULL,
+                                       &vulkan->msaaImageView);
+    
+    assert(vulkan->result == VK_SUCCESS);
     free(presentModes);
 }

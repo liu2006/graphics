@@ -1,8 +1,8 @@
 static float2 position[3] = float2[]
     (
      float2(0, -0.5),
-     float2(0.5, 0.2),
-     float2(-0.5, 0.2)
+     float2(0.5, 0.5),
+     float2(-0.5, 0.5)
     );
 
 static float3 color[3] = float3[]

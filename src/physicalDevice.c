@@ -12,11 +12,12 @@ void createPhysicalDevice(Vulkan *vulkan) {
     assert(vulkan->result == VK_SUCCESS);
     printf("\033[32m-----> Success Found Physical Device\033[0m\n");
     VkPhysicalDeviceFeatures features;
-    VkPhysicalDeviceProperties properties;
+    VkPhysicalDeviceProperties properties; 
     for (uint32_t i = 0; i < physicalDeviceCount; ++i) {
 	vkGetPhysicalDeviceFeatures(physicalDevices[i], &features);
         vkGetPhysicalDeviceProperties(physicalDevices[i], &properties);
-        printf("\033[35m- [ %u ] Supported Physical Device: %s\033[0m\n", i + 1, properties.deviceName);
+        printf("\033[35m- [ %u ] Supported Physical Device: %s\033[0m\n", i + 1,
+               properties.deviceName);
         if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
             vulkan->physicalDevice = physicalDevices[i];
             break;
@@ -26,6 +27,13 @@ void createPhysicalDevice(Vulkan *vulkan) {
     vkGetPhysicalDeviceProperties(vulkan->physicalDevice, &properties);
     printf("\033[34m- Select Physical Device [ %s ]\033[0m\n",
            properties.deviceName);
+    VkSampleCountFlags sampleCount =
+        properties.limits.framebufferColorSampleCounts &
+            properties.limits.framebufferDepthSampleCounts;
+    vulkan->msaaSamples = (sampleCount / 2) + (sampleCount % 2);
+    printf("\033[34m- Maximum Supported Multiple Sample [ %u ] MSAA\033[0m\n",
+           vulkan->msaaSamples);
+
     
     uint32_t queueFamilyPropertyCount;
     vkGetPhysicalDeviceQueueFamilyProperties(vulkan->physicalDevice,

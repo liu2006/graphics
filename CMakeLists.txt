@@ -22,6 +22,7 @@ target_sources(myLib
   src/swapChain.c
   src/pipeline.c
   src/dynamic.c
+  src/recordCommand.c
 
   PUBLIC
   FILE_SET HEADERS

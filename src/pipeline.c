@@ -1,4 +1,5 @@
 #include "vulkan.h"
+
 void createPipeline(Vulkan *vulkan) {
     
     FILE *file = fopen("../shaders/slang.spv", "rb");
@@ -46,13 +47,6 @@ void createPipeline(Vulkan *vulkan) {
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertexShaderStageInfo,
                                                       fragShaderStageInfo};
 
-    VkViewport viewport = {.x = 0.0f,
-                           .y = 0.0f,
-                           .width = vulkan->extent.width,
-                           .height = vulkan->extent.height,
-                           .minDepth = 0.0f,
-                           .maxDepth = 1.0f};
-    VkRect2D scissor = {.offset = {.x = 0, .y = 0}, .extent = vulkan->extent};
 
     VkPipelineViewportStateCreateInfo viewportCreateInfo = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
@@ -66,7 +60,7 @@ void createPipeline(Vulkan *vulkan) {
     VkDynamicState dynamicStates[] = {VK_DYNAMIC_STATE_VIEWPORT,
                                       VK_DYNAMIC_STATE_SCISSOR};
     
-    struct VkPipelineDynamicStateCreateInfo dynamicStateInfo = {
+    VkPipelineDynamicStateCreateInfo dynamicStateInfo = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
         .pNext = NULL,
         .flags = 0,
@@ -86,7 +80,7 @@ void createPipeline(Vulkan *vulkan) {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
         .pNext = NULL,
         .flags = 0,
-        .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY,
+        .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
         .primitiveRestartEnable = VK_TRUE};
 
     VkPipelineRasterizationStateCreateInfo rasterizationInfo = {
@@ -98,7 +92,7 @@ void createPipeline(Vulkan *vulkan) {
         .rasterizerDiscardEnable = VK_FALSE,
         .polygonMode = VK_POLYGON_MODE_FILL,
         .cullMode = VK_CULL_MODE_BACK_BIT,
-        .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+        .frontFace = VK_FRONT_FACE_CLOCKWISE,
         .depthBiasEnable = VK_FALSE,
         .depthBiasConstantFactor = 0.0f,
         .depthBiasClamp = 0.0f,
@@ -109,9 +103,9 @@ void createPipeline(Vulkan *vulkan) {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
         .pNext = NULL,
         .flags = 0,
-        .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
-        .sampleShadingEnable = VK_FALSE,
-        .minSampleShading = 0.0f,
+        .rasterizationSamples = VK_SAMPLE_COUNT_8_BIT,
+        .sampleShadingEnable = VK_TRUE,
+        .minSampleShading = 1.0f,
         .pSampleMask = 0,
         .alphaToCoverageEnable = VK_FALSE,
         .alphaToOneEnable = VK_FALSE};
