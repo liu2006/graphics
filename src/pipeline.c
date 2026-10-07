@@ -101,11 +101,11 @@ void createPipeline(Vulkan *vulkan) {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
         .pNext = NULL,
         .flags = 0,
-        .rasterizationSamples = VK_SAMPLE_COUNT_8_BIT,
+        .rasterizationSamples = vulkan->msaaSample,
         .sampleShadingEnable = VK_TRUE,
         .minSampleShading = 1.0f,
-        .pSampleMask = 0,
-        .alphaToCoverageEnable = VK_FALSE,
+        .pSampleMask = NULL,
+        .alphaToCoverageEnable = VK_TRUE,
         .alphaToOneEnable = VK_FALSE};
 
     VkPipelineColorBlendAttachmentState colorBlendAttachment = {
