@@ -17,3 +17,9 @@ void add_extensions(Extensions *extensions, const char *extension) {
     extensions->items[extensions->count++] = extension;
 }
 
+void add_vertex(Vertices *vertices, Vertex vertex) {
+    if (vertices->count >= vertices->capacity)
+	vertices->capacity = vertices->capacity ? vertices->capacity * 2 : 1;
+    vertices->items = realloc(vertices->items, vertices->capacity * sizeof(*vertices->items));
+    vertices->items[vertices->count++] = vertex;
+}

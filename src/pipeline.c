@@ -1,7 +1,7 @@
 #include "vulkan.h"
 
 void createPipeline(Vulkan *vulkan) {
-    
+
     FILE *file = fopen("../shaders/slang.spv", "rb");
     assert(file != NULL); 
     printf("\033[32m-----> Success Opened Shader File\033[0m\n");
@@ -65,21 +65,44 @@ void createPipeline(Vulkan *vulkan) {
         .dynamicStateCount = sizeof(dynamicStates) / sizeof(dynamicStates[0]),
         .pDynamicStates = dynamicStates};
 
-    VkPipelineVertexInputStateCreateInfo vertexInputInfo = {
-	.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-	.pNext = NULL,
-	.flags = 0,
-	.vertexBindingDescriptionCount = 0,
-	.pVertexBindingDescriptions = NULL,
-	.vertexAttributeDescriptionCount = 0,
-	.pVertexAttributeDescriptions = NULL
+    add_vertex(&vulkan->vertices,
+               (Vertex){.pos = {0.0f, -0.5f}, .color = {1.0f, 0.0f, 0.0f}});
+    add_vertex(&vulkan->vertices,
+               (Vertex){.pos = {0.5f, 0.5f}, .color = {0.0f, 1.0f, 0.0f}});
+    add_vertex(&vulkan->vertices,
+               (Vertex){.pos = {-0.5f, 0.5f}, .color = {0.0f, 0.0f, 1.0f}});
+
+    VkVertexInputBindingDescription bindingDescription = {
+	.binding = 0,
+	.stride = sizeof(Vertex),
+	.inputRate = VK_VERTEX_INPUT_RATE_VERTEX
     };
+
+    VkVertexInputAttributeDescription attributeDescription[2] = {
+        {.location = 0,
+         .binding = 0,
+         .format = VK_FORMAT_R32G32_SFLOAT,
+         .offset = offsetof(Vertex, pos)},
+        {.location = 1,
+         .binding = 0,
+         .format = VK_FORMAT_R32G32B32_SFLOAT,
+         .offset = offsetof(Vertex, color)}};
+
+    VkPipelineVertexInputStateCreateInfo vertexInputInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .vertexBindingDescriptionCount = 1,
+        .pVertexBindingDescriptions = &bindingDescription,
+        .vertexAttributeDescriptionCount = 2,
+        .pVertexAttributeDescriptions = attributeDescription};
+    
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
         .pNext = NULL,
         .flags = 0,
         .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-        .primitiveRestartEnable = VK_TRUE};
+        .primitiveRestartEnable = VK_FALSE};
 
     VkPipelineRasterizationStateCreateInfo rasterizationInfo = {
         .sType =
@@ -111,7 +134,7 @@ void createPipeline(Vulkan *vulkan) {
     VkPipelineColorBlendAttachmentState colorBlendAttachment = {
         .blendEnable = VK_TRUE,
         .srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
-        .dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA,
+        .dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
         .colorBlendOp = VK_BLEND_OP_ADD,
         .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
         .dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,

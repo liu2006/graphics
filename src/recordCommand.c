@@ -7,9 +7,8 @@ void recordCommandBuffer(Vulkan *vulkan) {
         .flags = 0,
         .pInheritanceInfo = NULL,
     };
-
-    vulkan->result = vkBeginCommandBuffer(vulkan->commandBuffers[0],
-                                          &commandBufferBeginInfo);
+    vulkan->result = vkBeginCommandBuffer(
+					  vulkan->commandBuffers[vulkan->frameIndex], &commandBufferBeginInfo);
     assert(vulkan->result == VK_SUCCESS);
 
     VkImageMemoryBarrier2 barrierStart[2] = {
@@ -52,17 +51,18 @@ void recordCommandBuffer(Vulkan *vulkan) {
             },
         },
     };
-    VkDependencyInfo dependencyInfo = {
-        .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-        .pNext = NULL,
-        .dependencyFlags = 0,
-        .memoryBarrierCount = 0,
-        .pMemoryBarriers = NULL,
-        .bufferMemoryBarrierCount = 0,
-        .pBufferMemoryBarriers = NULL,
-        .imageMemoryBarrierCount = 2,
-        .pImageMemoryBarriers = barrierStart};
-    vkCmdPipelineBarrier2(vulkan->commandBuffers[0], &dependencyInfo);
+    VkDependencyInfo dependencyInfo = {.sType =
+                                           VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+                                       .pNext = NULL,
+                                       .dependencyFlags = 0,
+                                       .memoryBarrierCount = 0,
+                                       .pMemoryBarriers = NULL,
+                                       .bufferMemoryBarrierCount = 0,
+                                       .pBufferMemoryBarriers = NULL,
+                                       .imageMemoryBarrierCount = 2,
+                                       .pImageMemoryBarriers = barrierStart};
+    
+    vkCmdPipelineBarrier2(vulkan->commandBuffers[vulkan->frameIndex], &dependencyInfo);
 
     VkRenderingAttachmentInfo renderingAttachmentInfo = {
         .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
@@ -90,11 +90,15 @@ void recordCommandBuffer(Vulkan *vulkan) {
         .pDepthAttachment = NULL,
         .pStencilAttachment = NULL};
 
-    vkCmdBeginRendering(vulkan->commandBuffers[0], &renderingInfo);
+    vkCmdBeginRendering(vulkan->commandBuffers[vulkan->frameIndex], &renderingInfo);
 
-    vkCmdBindPipeline(vulkan->commandBuffers[0],
-		      VK_PIPELINE_BIND_POINT_GRAPHICS,
-		      vulkan->graphicsPipeline);
+    vkCmdBindPipeline(vulkan->commandBuffers[vulkan->frameIndex],
+                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                      vulkan->graphicsPipeline);
+
+    VkDeviceSize offset = 0;
+    vkCmdBindVertexBuffers(vulkan->commandBuffers[vulkan->frameIndex], 0, 1,
+                           &vulkan->vertexBuffer, &offset);
 
     vulkan->viewport = (VkViewport){.x = 0.0f,
                            .y = 0.0f,
@@ -105,11 +109,11 @@ void recordCommandBuffer(Vulkan *vulkan) {
     vulkan->scissor =
         (VkRect2D){.offset = {.x = 0, .y = 0}, .extent = vulkan->extent};
     
-    vkCmdSetViewport(vulkan->commandBuffers[0], 0, 1, &vulkan->viewport);
-    vkCmdSetScissor(vulkan->commandBuffers[0], 0, 1, &vulkan->scissor);
+    vkCmdSetViewport(vulkan->commandBuffers[vulkan->frameIndex], 0, 1, &vulkan->viewport);
+    vkCmdSetScissor(vulkan->commandBuffers[vulkan->frameIndex], 0, 1, &vulkan->scissor);
 
-    vkCmdDraw(vulkan->commandBuffers[0], 3, 1, 0, 0);
-    vkCmdEndRendering(vulkan->commandBuffers[0]);
+    vkCmdDraw(vulkan->commandBuffers[vulkan->frameIndex], vulkan->vertices.count, 1, 0, 0);
+    vkCmdEndRendering(vulkan->commandBuffers[vulkan->frameIndex]);
 
     VkImageMemoryBarrier2 barrierEnd = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
@@ -140,7 +144,7 @@ void recordCommandBuffer(Vulkan *vulkan) {
                                         .imageMemoryBarrierCount = 1,
                                         .pImageMemoryBarriers = &barrierEnd};
     
-    vkCmdPipelineBarrier2(vulkan->commandBuffers[0], &dependencyInfo2);
-    vulkan->result = vkEndCommandBuffer(vulkan->commandBuffers[0]);
+    vkCmdPipelineBarrier2(vulkan->commandBuffers[vulkan->frameIndex], &dependencyInfo2);
+    vulkan->result = vkEndCommandBuffer(vulkan->commandBuffers[vulkan->frameIndex]);
     assert(vulkan->result == VK_SUCCESS);
 }

@@ -5,7 +5,7 @@ void createInstance(Vulkan *vulkan) {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     glfwWindowHint(GLFW_REFRESH_RATE, 165);
-    vulkan->window = glfwCreateWindow(1920, 1080, "glfw", NULL, NULL);
+    vulkan->window = glfwCreateWindow(1920, 1200, "glfw", NULL, NULL);
     assert(vulkan->window);
     glfwSetKeyCallback(vulkan->window, key_callback);
     printf("\033[32m-----> Success Created Window\033[0m\n");
