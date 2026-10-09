@@ -34,10 +34,10 @@ typedef struct {
     VkPhysicalDevice physicalDevice;
     uint32_t graphicsIndex;
     VkDevice device;
-    VkQueue queue;
+    VkQueue graphicsQueue;
     VkSurfaceFormatKHR *surfaceFormats;
     uint32_t formatIndex;
-    VkExtent2D extent;
+    VkExtent2D swapChainextent;
     uint32_t imageCount;
     VkImage *swapChainImages;
     uint32_t imageIndex;
@@ -47,12 +47,11 @@ typedef struct {
     VkImageView *imageViews;
     VkSampleCountFlagBits msaaSample;
     VkSwapchainKHR swapChain;
-    VkShaderModule shaderModule;
     long int spirvSize;
     uint32_t *spirvBuffer;
     VkViewport viewport;
     VkRect2D scissor;
-    VkPipelineLayout pipelineLayout;
+    
     VkPipeline graphicsPipeline;
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
@@ -62,6 +61,7 @@ typedef struct {
     VkSemaphore *presentSemaphores;
     VkSemaphore *renderSemaphores;
     VkFence *fences;
+    uint32_t flight_frames;
     uint32_t frameIndex;
 } Vulkan;
 
@@ -70,6 +70,8 @@ void createPhysicalDevice(Vulkan *vulkan);
 void createDevice(Vulkan *vulkan);
 void createSwapChain(Vulkan *vulkan);
 void createPipeline(Vulkan *vulkan);
+void createBuffers(Vulkan *vulkan);
+void createCommandBuffers(Vulkan *vulkan);
 void recordCommandBuffer(Vulkan *vulkan);
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 void add_extensions(Extensions *extensions, const char *extension);

@@ -22,6 +22,8 @@ target_sources(myLib
   src/swapChain.c
   src/pipeline.c
   src/dynamic.c
+  src/createBuffers.c
+  src/createCommandBuffers.c
   src/recordCommand.c
 
   PUBLIC
@@ -40,5 +42,3 @@ target_include_directories(vulkanSDK INTERFACE "${VULKAN_DIR}/include/")
 
 target_link_libraries(myLib PUBLIC glfw vulkanSDK vulkan)
 target_link_libraries(${PROJECT_NAME} PRIVATE myLib)
-
-

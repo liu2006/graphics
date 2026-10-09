@@ -13,7 +13,7 @@ void createPhysicalDevice(Vulkan *vulkan) {
     printf("\033[32m-----> Success Found Physical Device\033[0m\n");
     VkPhysicalDeviceFeatures features;
     VkPhysicalDeviceProperties properties; 
-    for (uint32_t i = 0; i < physicalDeviceCount; ++i) {
+    for (uint32_t i = 0; i < physicalDeviceCount; i++) {
 	vkGetPhysicalDeviceFeatures(physicalDevices[i], &features);
         vkGetPhysicalDeviceProperties(physicalDevices[i], &properties);
         printf("\033[35m- [ %u ] Supported Physical Device: %s\033[0m\n", i + 1,
@@ -54,7 +54,7 @@ void createPhysicalDevice(Vulkan *vulkan) {
     vkGetPhysicalDeviceQueueFamilyProperties(
 					     vulkan->physicalDevice, &queueFamilyPropertyCount, queueFamilyProperties);
     bool supportedGraphics;
-    for (uint32_t i = 0; i < queueFamilyPropertyCount; ++i) {
+    for (uint32_t i = 0; i < queueFamilyPropertyCount; i++) {
 	if (queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
 	    supportedGraphics = true;
 	    vulkan->graphicsIndex = i;
@@ -76,8 +76,8 @@ void createPhysicalDevice(Vulkan *vulkan) {
     add_extensions(&vulkan->requiredDeviceExtensions, "VK_KHR_swapchain");
 
     uint32_t supportedCount = 0;
-    for (uint32_t i = 0; i < vulkan->requiredDeviceExtensions.count; ++i) {                       
-	for (uint32_t j = 0; j < extensionPropertyCount; ++j) {
+    for (uint32_t i = 0; i < vulkan->requiredDeviceExtensions.count; i++) {
+	for (uint32_t j = 0; j < extensionPropertyCount; j++) {
             if (strcmp(vulkan->requiredDeviceExtensions.items[i],
                        extensionProperties[j].extensionName) == 0) {
 		supportedCount += 1;

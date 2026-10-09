@@ -82,7 +82,7 @@ void recordCommandBuffer(Vulkan *vulkan) {
         .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
         .pNext = NULL,
         .flags = 0,
-        .renderArea = {.offset = {.x = 0, .y = 0}, .extent = vulkan->extent},
+        .renderArea = {.offset = {.x = 0, .y = 0}, .extent = vulkan->swapChainextent},
         .layerCount = 1,
         .viewMask = 0,
         .colorAttachmentCount = 1,
@@ -102,12 +102,12 @@ void recordCommandBuffer(Vulkan *vulkan) {
 
     vulkan->viewport = (VkViewport){.x = 0.0f,
                            .y = 0.0f,
-                           .width = vulkan->extent.width,
-                           .height = vulkan->extent.height,
+                           .width = vulkan->swapChainextent.width,
+                           .height = vulkan->swapChainextent.height,
                            .minDepth = 0.0f,
                            .maxDepth = 1.0f};
     vulkan->scissor =
-        (VkRect2D){.offset = {.x = 0, .y = 0}, .extent = vulkan->extent};
+        (VkRect2D){.offset = {.x = 0, .y = 0}, .extent = vulkan->swapChainextent};
     
     vkCmdSetViewport(vulkan->commandBuffers[vulkan->frameIndex], 0, 1, &vulkan->viewport);
     vkCmdSetScissor(vulkan->commandBuffers[vulkan->frameIndex], 0, 1, &vulkan->scissor);

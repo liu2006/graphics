@@ -1,7 +1,6 @@
 #include "vulkan.h"
 
 void createPipeline(Vulkan *vulkan) {
-
     FILE *file = fopen("../shaders/slang.spv", "rb");
     assert(file != NULL); 
     printf("\033[32m-----> Success Opened Shader File\033[0m\n");
@@ -16,6 +15,7 @@ void createPipeline(Vulkan *vulkan) {
     fclose(file);
     printf("\033[32m-----> Success Loaded Shader File\033[0m\n");
 
+    VkShaderModule shaderModule;
     VkShaderModuleCreateInfo shaderModuleInfo = {
         .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
         .pNext = NULL,
@@ -23,7 +23,7 @@ void createPipeline(Vulkan *vulkan) {
         .codeSize = (size_t)vulkan->spirvSize,
         .pCode = vulkan->spirvBuffer};
     vulkan->result = vkCreateShaderModule(vulkan->device, &shaderModuleInfo,
-                                          NULL, &vulkan->shaderModule);
+                                          NULL, &shaderModule);
     assert(vulkan->result == VK_SUCCESS);
 
     VkPipelineShaderStageCreateInfo vertexShaderStageInfo = {
@@ -31,7 +31,7 @@ void createPipeline(Vulkan *vulkan) {
         .pNext = NULL,
         .flags = 0,
         .stage = VK_SHADER_STAGE_VERTEX_BIT,
-        .module = vulkan->shaderModule,
+        .module = shaderModule,
         .pName = "vertexMain",
         .pSpecializationInfo = NULL};
 
@@ -40,7 +40,7 @@ void createPipeline(Vulkan *vulkan) {
         .pNext = NULL,
         .flags = 0,
         .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-        .module = vulkan->shaderModule,
+        .module = shaderModule,
         .pName = "fragMain",
         .pSpecializationInfo = NULL};
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertexShaderStageInfo,
@@ -152,6 +152,7 @@ void createPipeline(Vulkan *vulkan) {
         .pAttachments = &colorBlendAttachment,
         .blendConstants = {0.0f, 0.0f, 0.0f, 0.0f}};
 
+    VkPipelineLayout pipelineLayout;
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
         .pNext = NULL,
@@ -162,7 +163,7 @@ void createPipeline(Vulkan *vulkan) {
         .pPushConstantRanges = NULL};
 
     vulkan->result = vkCreatePipelineLayout(vulkan->device, &pipelineLayoutInfo,
-                                            NULL, &vulkan->pipelineLayout);
+                                            NULL, &pipelineLayout);
     assert(vulkan->result == VK_SUCCESS);
 
     VkPipelineRenderingCreateInfo renderingInfo = {
@@ -189,7 +190,7 @@ void createPipeline(Vulkan *vulkan) {
         .pDepthStencilState = NULL,
         .pColorBlendState = &colorBlendCreateInfo,
         .pDynamicState = &dynamicStateInfo,
-        .layout = vulkan->pipelineLayout,
+        .layout = pipelineLayout,
         .renderPass = NULL,
         .subpass = 0,
         .basePipelineHandle = VK_NULL_HANDLE,

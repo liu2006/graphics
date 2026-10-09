@@ -17,7 +17,7 @@ void createSwapChain(Vulkan *vulkan) {
     assert(vulkan->result == VK_SUCCESS);
 
     vulkan->formatIndex = 0;
-    for (uint32_t i = 0; i < surfaceFormatCount; ++i) {
+    for (uint32_t i = 0; i < surfaceFormatCount; i++) {
       if (vulkan->surfaceFormats[i].format == VK_FORMAT_B8G8R8A8_SRGB &&
           vulkan->surfaceFormats[i].colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
                 vulkan->formatIndex = i;
@@ -40,7 +40,7 @@ void createSwapChain(Vulkan *vulkan) {
 
     VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
     bool supportedMailbox;
-    for (uint32_t i = 0; i < presentModeCount; ++i) {
+    for (uint32_t i = 0; i < presentModeCount; i++) {
         if (presentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
             presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
             supportedMailbox = true;
@@ -52,8 +52,8 @@ void createSwapChain(Vulkan *vulkan) {
 	printf("\033[33m- Usage [ fifo ] Present Mode\033[0m\n");
     int width, height;
     glfwGetFramebufferSize(vulkan->window, &width, &height);
-    vulkan->extent.width = width;
-    vulkan->extent.height = height;
+    vulkan->swapChainextent.width = width;
+    vulkan->swapChainextent.height = height;
     if (surfaceCapabilities.minImageCount >= 2)
 	vulkan->imageCount = 2; else
 	vulkan->imageCount = surfaceCapabilities.minImageCount;
@@ -67,7 +67,7 @@ void createSwapChain(Vulkan *vulkan) {
         .minImageCount = vulkan->imageCount,
         .imageFormat = vulkan->surfaceFormats[vulkan->formatIndex].format,
         .imageColorSpace = vulkan->surfaceFormats[vulkan->formatIndex].colorSpace,
-        .imageExtent = vulkan->extent,
+        .imageExtent = vulkan->swapChainextent,
         .imageArrayLayers = 1,
         .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
         .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
@@ -107,7 +107,7 @@ void createSwapChain(Vulkan *vulkan) {
                              .baseArrayLayer = 0,
                              .layerCount = 1}};
 
-    for (uint32_t i = 0; i < vulkan->imageCount; ++i) {
+    for (uint32_t i = 0; i < vulkan->imageCount; i++) {
 	imageViewCreateInfo.image = vulkan->swapChainImages[i];
 	vulkan->result = vkCreateImageView(vulkan->device, &imageViewCreateInfo,
 					   NULL, &vulkan->imageViews[i]);
@@ -120,8 +120,8 @@ void createSwapChain(Vulkan *vulkan) {
         .flags = 0,
         .imageType = VK_IMAGE_TYPE_2D,
         .format = vulkan->surfaceFormats[vulkan->formatIndex].format,
-        .extent = {.width = vulkan->extent.width,
-                   .height = vulkan->extent.height,
+        .extent = {.width = vulkan->swapChainextent.width,
+                   .height = vulkan->swapChainextent.height,
                    .depth = 1},
         .mipLevels = 1,
         .arrayLayers = 1,
@@ -145,7 +145,7 @@ void createSwapChain(Vulkan *vulkan) {
     vkGetPhysicalDeviceMemoryProperties(vulkan->physicalDevice,
                                         &memoryProperties);
     uint32_t memoryTypeIndex;
-    for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i) {
+    for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++) {
       if (memoryProperties.memoryTypes[i].propertyFlags &
           VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) {
           memoryTypeIndex = i;
