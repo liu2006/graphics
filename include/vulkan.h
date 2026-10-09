@@ -51,7 +51,6 @@ typedef struct {
     uint32_t *spirvBuffer;
     VkViewport viewport;
     VkRect2D scissor;
-    
     VkPipeline graphicsPipeline;
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;

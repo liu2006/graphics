@@ -54,7 +54,7 @@ int main(void) {
         };
         vulkan->result = vkQueuePresentKHR(vulkan->graphicsQueue, &presentInfo);
         assert(vulkan->result == VK_SUCCESS);
-        vulkan->frameIndex = (vulkan->frameIndex + 1) % vulkan->imageCount;
+        vulkan->frameIndex = (vulkan->frameIndex + 1) % vulkan->flight_frames;
         glfwPollEvents();
     }
     printf("\033[36m-----> Program Exited Success\033[0m\n");

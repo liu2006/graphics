@@ -71,7 +71,6 @@ void createPipeline(Vulkan *vulkan) {
                (Vertex){.pos = {0.5f, 0.5f}, .color = {0.0f, 1.0f, 0.0f}});
     add_vertex(&vulkan->vertices,
                (Vertex){.pos = {-0.5f, 0.5f}, .color = {0.0f, 0.0f, 1.0f}});
-
     VkVertexInputBindingDescription bindingDescription = {
 	.binding = 0,
 	.stride = sizeof(Vertex),
