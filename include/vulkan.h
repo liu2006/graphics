@@ -2,6 +2,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <assert.h>
+#include <vulkan/vulkan.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,6 +26,7 @@ typedef struct {
 } Extensions;
 
 typedef struct {
+    
     GLFWwindow *window;
     Extensions requiredDeviceExtensions;
     Vertices vertices; 

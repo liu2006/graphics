@@ -8,8 +8,8 @@ int main(void) {
     createDevice(vulkan);
     createSwapChain(vulkan);
     createPipeline(vulkan);
-    createBuffers(vulkan);
     createCommandBuffers(vulkan);
+    createBuffers(vulkan);
 
     while (!glfwWindowShouldClose(vulkan->window)) {
         vulkan->result = vkWaitForFences(vulkan->device, 1, &vulkan->fences[vulkan->frameIndex],
