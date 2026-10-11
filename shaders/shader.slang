@@ -1,12 +1,13 @@
 struct VSInput
 {
-    float3 color;
     float2 position;
+    float3 color;
+
 };
     
 struct VSOutput {
-    float3 color;
     float4 position : SV_Position; 
+    float3 color;
 };
 
 [shader("vertex")]

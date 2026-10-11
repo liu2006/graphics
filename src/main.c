@@ -2,14 +2,15 @@
 #include "vulkan/vulkan_core.h"
 
 int main(void) {
-    Vulkan *vulkan = malloc(sizeof(*vulkan));
+    Vulkan *vulkan = calloc(1, sizeof(*vulkan));
     createInstance(vulkan);
     createPhysicalDevice(vulkan);
     createDevice(vulkan);
     createSwapChain(vulkan);
     createPipeline(vulkan);
-    createCommandBuffers(vulkan);
-    createBuffers(vulkan);
+    createCommandBuffer(vulkan);
+    createVertexBuffer(vulkan);
+    createIndexBuffer(vulkan);
 
     while (!glfwWindowShouldClose(vulkan->window)) {
         vulkan->result = vkWaitForFences(vulkan->device, 1, &vulkan->fences[vulkan->frameIndex],

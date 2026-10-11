@@ -99,6 +99,8 @@ void recordCommandBuffer(Vulkan *vulkan) {
     VkDeviceSize offset = 0;
     vkCmdBindVertexBuffers(vulkan->commandBuffers[vulkan->frameIndex], 0, 1,
                            &vulkan->vertexBuffer, &offset);
+    vkCmdBindIndexBuffer(vulkan->commandBuffers[vulkan->frameIndex],
+                         vulkan->indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
     vulkan->viewport = (VkViewport){.x = 0.0f,
                            .y = 0.0f,
@@ -110,9 +112,12 @@ void recordCommandBuffer(Vulkan *vulkan) {
         (VkRect2D){.offset = {.x = 0, .y = 0}, .extent = vulkan->swapChainextent};
     
     vkCmdSetViewport(vulkan->commandBuffers[vulkan->frameIndex], 0, 1, &vulkan->viewport);
-    vkCmdSetScissor(vulkan->commandBuffers[vulkan->frameIndex], 0, 1, &vulkan->scissor);
+    vkCmdSetScissor(vulkan->commandBuffers[vulkan->frameIndex], 0, 1,
+                    &vulkan->scissor);
 
-    vkCmdDraw(vulkan->commandBuffers[vulkan->frameIndex], vulkan->vertices.count, 1, 0, 0);
+    vkCmdDrawIndexed(vulkan->commandBuffers[vulkan->frameIndex],
+                     vulkan->indices.count, 1, 0, 0, 0);
+    
     vkCmdEndRendering(vulkan->commandBuffers[vulkan->frameIndex]);
 
     VkImageMemoryBarrier2 barrierEnd = {

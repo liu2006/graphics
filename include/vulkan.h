@@ -20,13 +20,22 @@ typedef struct {
 } Vertices;
 
 typedef struct {
+    uint32_t value;
+} Index;
+
+typedef struct {
+    Index *items;
+    size_t count;
+    size_t capacity;
+} Indices;
+
+typedef struct {
     const char **items;
     size_t count;
     size_t capacity;
 } Extensions;
 
 typedef struct {
-    
     GLFWwindow *window;
     Extensions requiredDeviceExtensions;
     Vertices vertices; 
@@ -56,6 +65,9 @@ typedef struct {
     VkPipeline graphicsPipeline;
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
+    Indices indices;
+    VkBuffer indexBuffer;
+    VkDeviceMemory indexBufferMemory;
     VkCommandPool commandPool;
     VkCommandBuffer *commandBuffers;
     uint32_t commandBufferCount;
@@ -71,9 +83,12 @@ void createPhysicalDevice(Vulkan *vulkan);
 void createDevice(Vulkan *vulkan);
 void createSwapChain(Vulkan *vulkan);
 void createPipeline(Vulkan *vulkan);
-void createBuffers(Vulkan *vulkan);
-void createCommandBuffers(Vulkan *vulkan);
+void createVertexBuffer(Vulkan *vulkan);
+void createIndexBuffer(Vulkan *vulkan);
+void createCommandBuffer(Vulkan *vulkan);
 void recordCommandBuffer(Vulkan *vulkan);
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
-void add_extensions(Extensions *extensions, const char *extension);
-void add_vertex(Vertices *vertices, Vertex vertex); 
+void append_extensions(Extensions *extensions, const char *extension);
+void append_vertex(Vertices *vertices, Vertex *vertex);
+void append_index(Indices *indices, Index *index);
+

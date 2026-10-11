@@ -16,15 +16,16 @@ target_sources(${PROJECT_NAME} PRIVATE
 add_library(myLib SHARED)
 target_sources(myLib
   PRIVATE
+  src/dynamic.c
   src/instance.c
   src/physicalDevice.c
   src/device.c
   src/swapChain.c
   src/pipeline.c
-  src/dynamic.c
-  src/createBuffers.c
-  src/createCommandBuffers.c
+  src/commandBuffer.c
   src/recordCommand.c
+  src/vertexBuffer.c
+  src/indexBuffer.c
 
   PUBLIC
   FILE_SET HEADERS

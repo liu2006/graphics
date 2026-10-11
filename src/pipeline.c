@@ -65,12 +65,23 @@ void createPipeline(Vulkan *vulkan) {
         .dynamicStateCount = sizeof(dynamicStates) / sizeof(dynamicStates[0]),
         .pDynamicStates = dynamicStates};
 
-    add_vertex(&vulkan->vertices,
-               (Vertex){.pos = {0.0f, -0.5f}, .color = {1.0f, 0.0f, 0.0f}});
-    add_vertex(&vulkan->vertices,
-               (Vertex){.pos = {0.5f, 0.5f}, .color = {0.0f, 1.0f, 0.0f}});
-    add_vertex(&vulkan->vertices,
-               (Vertex){.pos = {-0.5f, 0.5f}, .color = {0.0f, 0.0f, 1.0f}});
+    Vertex vertices[] = {{.pos = {-0.5f, -0.5f}, .color = {1.0f, 0.0f, 0.0f}},
+                         {.pos = {0.5f, -0.5f}, .color = {0.0f, 1.0f, 0.0f}},
+                         {.pos = {0.5f, 0.5f}, .color = {0.0f, 0.0f, 1.0f}},
+                         {.pos = {-0.5f, 0.5f}, .color = {1.0f, 1.0f, 1.0f}}};
+    
+    size_t vertexCount = sizeof(vertices) / sizeof(vertices[0]);
+    for (uint32_t i = 0; i < vertexCount; i++) {
+	append_vertex(&vulkan->vertices, &vertices[i]);
+    }
+
+    Index indices[] = {{.value = 0}, {.value = 1}, {.value = 2},
+                       {.value = 2}, {.value = 3}, {.value = 0}};
+    size_t indexCount = sizeof(indices) / sizeof(indices[0]); 
+    for (uint32_t i = 0; i < indexCount; i++) {
+	append_index(&vulkan->indices, &indices[i]);
+    }
+    
     VkVertexInputBindingDescription bindingDescription = {
 	.binding = 0,
 	.stride = sizeof(Vertex),

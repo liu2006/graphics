@@ -61,3 +61,4 @@ void createInstance(Vulkan *vulkan) {
     assert(vulkan->result == VK_SUCCESS);
     free(extensionProperties);
 }
+

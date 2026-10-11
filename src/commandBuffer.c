@@ -1,6 +1,6 @@
 #include "vulkan.h"
 
-void createCommandBuffers(Vulkan *vulkan) {
+void createCommandBuffer(Vulkan *vulkan) {
     VkCommandPoolCreateInfo commandPoolInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
         .pNext = NULL,
