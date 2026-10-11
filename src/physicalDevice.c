@@ -73,7 +73,7 @@ void createPhysicalDevice(Vulkan *vulkan) {
         vulkan->physicalDevice, NULL, &extensionPropertyCount,
         extensionProperties);
     assert(vulkan->result == VK_SUCCESS);
-    append_extensions(&vulkan->requiredDeviceExtensions, "VK_KHR_swapchain");
+    append_extension(&vulkan->requiredDeviceExtensions, "VK_KHR_swapchain");
 
     uint32_t supportedCount = 0;
     for (uint32_t i = 0; i < vulkan->requiredDeviceExtensions.count; i++) {

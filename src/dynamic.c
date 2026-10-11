@@ -8,7 +8,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     }
 }
 
-void append_extensions(Extensions *extensions, const char *extension) {
+void append_extension(Extensions *extensions, const char *extension) {
     if (extensions->count >= extensions->capacity) {
 	extensions->capacity =
             extensions->capacity ? extensions->capacity * 2 : 1;

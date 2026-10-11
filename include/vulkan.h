@@ -88,7 +88,7 @@ void createIndexBuffer(Vulkan *vulkan);
 void createCommandBuffer(Vulkan *vulkan);
 void recordCommandBuffer(Vulkan *vulkan);
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
-void append_extensions(Extensions *extensions, const char *extension);
+void append_extension(Extensions *extensions, const char *extension);
 void append_vertex(Vertices *vertices, Vertex *vertex);
 void append_index(Indices *indices, Index *index);
 
