@@ -14,7 +14,6 @@ void createPhysicalDevice(Vulkan *vulkan) {
     VkPhysicalDeviceFeatures features;
     VkPhysicalDeviceProperties properties; 
     for (uint32_t i = 0; i < physicalDeviceCount; i++) {
-	vkGetPhysicalDeviceFeatures(physicalDevices[i], &features);
         vkGetPhysicalDeviceProperties(physicalDevices[i], &properties);
         printf("\033[35m- [ %u ] Supported Physical Device: %s\033[0m\n", i + 1,
                properties.deviceName);
@@ -25,24 +24,11 @@ void createPhysicalDevice(Vulkan *vulkan) {
         vulkan->physicalDevice = physicalDevices[i];
     }
     vkGetPhysicalDeviceProperties(vulkan->physicalDevice, &properties);
+    vkGetPhysicalDeviceFeatures(vulkan->physicalDevice, &features);
     printf("\033[34m- Selected Physical Device [ %s ]\033[0m\n",
            properties.deviceName);
-    VkSampleCountFlags samples =
-        properties.limits.framebufferColorSampleCounts &
-            properties.limits.framebufferDepthSampleCounts;
-    if (samples & VK_SAMPLE_COUNT_64_BIT)
-	vulkan->msaaSample = VK_SAMPLE_COUNT_64_BIT;
-    else if (samples & VK_SAMPLE_COUNT_32_BIT)
-	vulkan->msaaSample = VK_SAMPLE_COUNT_32_BIT;
-    else if (samples & VK_SAMPLE_COUNT_16_BIT)
-	vulkan->msaaSample = VK_SAMPLE_COUNT_16_BIT;
-    else if (samples & VK_SAMPLE_COUNT_8_BIT)
-	vulkan->msaaSample = VK_SAMPLE_COUNT_8_BIT;
-    else if (samples & VK_SAMPLE_COUNT_4_BIT)
-	vulkan->msaaSample = VK_SAMPLE_COUNT_4_BIT;
-    else if (samples & VK_SAMPLE_COUNT_2_BIT)
-	vulkan->msaaSample = VK_SAMPLE_COUNT_2_BIT;
-    else vulkan->msaaSample = VK_SAMPLE_COUNT_1_BIT;
+
+    vulkan->msaaSample = DETERMINE_MSAA_SAMPLE(properties);
     printf("\033[34m- Selected MSAA Sample [ %u x MSAA ]\033[0m\n",
            vulkan->msaaSample);
     
@@ -73,19 +59,12 @@ void createPhysicalDevice(Vulkan *vulkan) {
         vulkan->physicalDevice, NULL, &extensionPropertyCount,
         extensionProperties);
     assert(vulkan->result == VK_SUCCESS);
-    append_extension(&vulkan->requiredDeviceExtensions, "VK_KHR_swapchain");
+    APPEND_VECTOR(vulkan->requiredDeviceExtensions, "VK_KHR_swapchain");
 
     uint32_t supportedCount = 0;
-    for (uint32_t i = 0; i < vulkan->requiredDeviceExtensions.count; i++) {
-	for (uint32_t j = 0; j < extensionPropertyCount; j++) {
-            if (strcmp(vulkan->requiredDeviceExtensions.items[i],
-                       extensionProperties[j].extensionName) == 0) {
-		supportedCount += 1;
-		break;
-            } else
-		continue;
-        }
-    }
+    CHECK_EXTENSIONS(vulkan->requiredDeviceExtensions.count,
+                     vulkan->requiredDeviceExtensions.items, extensionPropertyCount,
+                     extensionProperties, supportedCount);
     assert(supportedCount == vulkan->requiredDeviceExtensions.count);
     printf("\033[32m-----> Physical Device Supported Swap Chain\033[0m\n");
     free(extensionProperties);

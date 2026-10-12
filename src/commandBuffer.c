@@ -27,22 +27,21 @@ void createCommandBuffer(Vulkan *vulkan) {
     VkFenceCreateInfo fenceInfo = {.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
                                    .pNext = NULL,
                                    .flags = VK_FENCE_CREATE_SIGNALED_BIT};
-    vulkan->flight_frames = 2;
     vulkan->frameIndex = 0;
 
     vulkan->presentSemaphores =
-        malloc(sizeof(*vulkan->presentSemaphores) * vulkan->flight_frames);
+        malloc(sizeof(*vulkan->presentSemaphores) * FLIGHT_FRAMES);
     vulkan->renderSemaphores =
         malloc(sizeof(*vulkan->renderSemaphores) * vulkan->imageCount);
     vulkan->fences =
-        malloc(sizeof(*vulkan->fences) * vulkan->flight_frames);
+        malloc(sizeof(*vulkan->fences) * FLIGHT_FRAMES);
 
     for (uint32_t i = 0; i < vulkan->imageCount; i++) {
 	vulkan->result = vkCreateSemaphore(vulkan->device, &semaphoreInfo, NULL,
 					   &vulkan->renderSemaphores[i]);
         assert(vulkan->result == VK_SUCCESS);
     }
-    for (uint32_t i = 0; i < vulkan->flight_frames; i++) {
+    for (uint32_t i = 0; i < FLIGHT_FRAMES; i++) {
 	vulkan->result = vkCreateFence(vulkan->device, &fenceInfo, NULL,
                                        &vulkan->fences[i]);
 	assert(vulkan->result == VK_SUCCESS);

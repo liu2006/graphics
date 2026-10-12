@@ -2,11 +2,58 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <assert.h>
-#include <vulkan/vulkan.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+
+#define FLIGHT_FRAMES 2
+
+#define DETERMINE_MSAA_SAMPLE(proprties)\
+({\
+    VkSampleCountFlags _samples = properties.limits.framebufferColorSampleCounts &\
+	properties.limits.framebufferDepthSampleCounts;\
+    VkSampleCountFlagBits _result;\
+    if (_samples & VK_SAMPLE_COUNT_64_BIT)\
+	_result = VK_SAMPLE_COUNT_64_BIT;\
+    else if (_samples & VK_SAMPLE_COUNT_32_BIT)\
+	_result = VK_SAMPLE_COUNT_32_BIT;\
+    else if (_samples & VK_SAMPLE_COUNT_16_BIT)\
+	_result = VK_SAMPLE_COUNT_16_BIT;\
+    else if (_samples & VK_SAMPLE_COUNT_8_BIT)\
+	_result = VK_SAMPLE_COUNT_8_BIT;\
+    else if (_samples & VK_SAMPLE_COUNT_4_BIT)\
+	_result = VK_SAMPLE_COUNT_4_BIT;\
+    else if (_samples & VK_SAMPLE_COUNT_2_BIT)\
+	_result = VK_SAMPLE_COUNT_2_BIT;\
+    else\
+	_result = VK_SAMPLE_COUNT_1_BIT;\
+    _result;\
+})\
+
+#define CHECK_EXTENSIONS(requiredExtensionCount, requiredExtensions, extensionCount, extensionProperties, supportedCount)\
+do {\
+    for (uint32_t i = 0; i < requiredExtensionCount; i++) {\
+	for (uint32_t j = 0; j < extensionCount; j++) {\
+            if (strcmp(requiredExtensions[i],\
+                       extensionProperties[j].extensionName) == 0) {\
+		supportedCount++;\
+		break;\
+            } else\
+		continue;\
+	}\
+    }\
+} while (0)
+
+#define APPEND_VECTOR(vector, value)\
+do {\
+    if (vector.count >= vector.capacity) {\
+	vector.capacity =\
+            vector.capacity ? vector.capacity * 2 : 1;\
+	vector.items = realloc(vector.items, vector.capacity * sizeof(*vector.items));\
+    }\
+    vector.items[vector.count++] = value;\
+} while(0)\
 
 typedef struct {
     float pos[2];
@@ -38,7 +85,6 @@ typedef struct {
 typedef struct {
     GLFWwindow *window;
     Extensions requiredDeviceExtensions;
-    Vertices vertices; 
     VkResult result;
     VkInstance instance;
     VkSurfaceKHR surface;
@@ -63,6 +109,7 @@ typedef struct {
     VkViewport viewport;
     VkRect2D scissor;
     VkPipeline graphicsPipeline;
+    Vertices vertices; 
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
     Indices indices;
@@ -74,7 +121,6 @@ typedef struct {
     VkSemaphore *presentSemaphores;
     VkSemaphore *renderSemaphores;
     VkFence *fences;
-    uint32_t flight_frames;
     uint32_t frameIndex;
 } Vulkan;
 
@@ -88,7 +134,3 @@ void createIndexBuffer(Vulkan *vulkan);
 void createCommandBuffer(Vulkan *vulkan);
 void recordCommandBuffer(Vulkan *vulkan);
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
-void append_extension(Extensions *extensions, const char *extension);
-void append_vertex(Vertices *vertices, Vertex *vertex);
-void append_index(Indices *indices, Index *index);
-

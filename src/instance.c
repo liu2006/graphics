@@ -24,16 +24,7 @@ void createInstance(Vulkan *vulkan) {
     assert(vulkan->result == VK_SUCCESS);
 
     uint32_t supportedCount = 0;
-    for (uint32_t i = 0; i < glfwExtensionCount; i++) {                       
-	for (uint32_t j = 0; j < extensionCount; j++) {
-          if (strcmp(glfwExtensions[i],
-                     extensionProperties[j].extensionName) == 0) {
-              supportedCount += 1;
-              break;
-          } else
-              continue;
-        }
-    }
+    CHECK_EXTENSIONS(glfwExtensionCount, glfwExtensions, extensionCount, extensionProperties, supportedCount);
     assert(supportedCount == glfwExtensionCount);
 
     VkApplicationInfo appInfo = {

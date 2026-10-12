@@ -72,14 +72,14 @@ void createPipeline(Vulkan *vulkan) {
     
     size_t vertexCount = sizeof(vertices) / sizeof(vertices[0]);
     for (uint32_t i = 0; i < vertexCount; i++) {
-	append_vertex(&vulkan->vertices, &vertices[i]);
+	APPEND_VECTOR(vulkan->vertices, vertices[i]);
     }
 
     Index indices[] = {{.value = 0}, {.value = 1}, {.value = 2},
                        {.value = 2}, {.value = 3}, {.value = 0}};
     size_t indexCount = sizeof(indices) / sizeof(indices[0]); 
     for (uint32_t i = 0; i < indexCount; i++) {
-	append_index(&vulkan->indices, &indices[i]);
+	APPEND_VECTOR(vulkan->indices, indices[i]);
     }
     
     VkVertexInputBindingDescription bindingDescription = {
