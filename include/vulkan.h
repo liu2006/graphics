@@ -83,6 +83,19 @@ typedef struct {
 } Extensions;
 
 typedef struct {
+    float model[4][4];
+    float view[4][4];
+    float proj[4][4];
+} ubo;
+
+
+typedef struct {
+    ubo *items;
+    size_t count;
+    size_t capacity;
+} uniformBufferResources;
+
+typedef struct {
     GLFWwindow *window;
     Extensions requiredDeviceExtensions;
     VkResult result;
@@ -122,6 +135,10 @@ typedef struct {
     VkSemaphore *renderSemaphores;
     VkFence *fences;
     uint32_t frameIndex;
+    VkBuffer *uniformBuffers;
+    VkDeviceMemory *uniformBuffersMemory;
+    void **uniformBuffersMapped;
+    uniformBufferResources ubr;
 } Vulkan;
 
 void createInstance(Vulkan *vulkan);
@@ -129,8 +146,9 @@ void createPhysicalDevice(Vulkan *vulkan);
 void createDevice(Vulkan *vulkan);
 void createSwapChain(Vulkan *vulkan);
 void createPipeline(Vulkan *vulkan);
-void createVertexBuffer(Vulkan *vulkan);
-void createIndexBuffer(Vulkan *vulkan);
 void createCommandBuffer(Vulkan *vulkan);
 void recordCommandBuffer(Vulkan *vulkan);
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
+void createVertexBuffer(Vulkan *vulkan);
+void createIndexBuffer(Vulkan *vulkan);
+void createUniformBuffers(Vulkan *vulkan);

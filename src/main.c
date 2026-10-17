@@ -11,6 +11,7 @@ int main(void) {
     createCommandBuffer(vulkan);
     createVertexBuffer(vulkan);
     createIndexBuffer(vulkan);
+    createUniformBuffers(vulkan);
 
     while (!glfwWindowShouldClose(vulkan->window)) {
         vulkan->result = vkWaitForFences(vulkan->device, 1, &vulkan->fences[vulkan->frameIndex],
