@@ -1,7 +1,7 @@
 #include "vulkan.h"
 
 void createPipeline(Vulkan *vulkan) {
-    FILE *file = fopen(SHADERS_DIR "/slang.spv", "rb");
+    FILE *file = fopen("share/shaders/slang.spv", "rb");
     assert(file != NULL); 
     printf("\033[32m-----> Success Opened Shader File\033[0m\n");
     fseek(file, 0, SEEK_END);
