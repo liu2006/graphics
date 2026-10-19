@@ -64,19 +64,18 @@ void recordCommandBuffer(Vulkan *vulkan) {
     
     vkCmdPipelineBarrier2(vulkan->commandBuffers[vulkan->frameIndex], &dependencyInfo);
 
-    VkRenderingAttachmentInfo renderingAttachmentInfo = {
-        .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
-        .pNext = NULL,
-        .imageView = vulkan->msaaImageView,
-        .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        .resolveMode = VK_RESOLVE_MODE_AVERAGE_BIT,
-        .resolveImageView = vulkan->imageViews[vulkan->imageIndex],
-        .resolveImageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-        .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-        .clearValue = {
-	    .color = {0.1f, 0.1f, 0.1f, 1.0f},
-        }};
+    VkRenderingAttachmentInfo renderingAttachmentInfo = {.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+                                                         .pNext = NULL,
+                                                         .imageView = vulkan->msaaImageView,
+                                                         .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                                                         .resolveMode = VK_RESOLVE_MODE_AVERAGE_BIT,
+                                                         .resolveImageView = vulkan->imageViews[vulkan->imageIndex],
+                                                         .resolveImageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                                                         .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+                                                         .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+                                                         .clearValue = {
+                                                             .color = {.float32 = {0.1f, 0.1f, 0.1f, 1.0f}},
+                                                         }};
 
     VkRenderingInfo renderingInfo = {
         .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,

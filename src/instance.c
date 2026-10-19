@@ -1,6 +1,7 @@
 #include "vulkan.h"
 
-void createInstance(Vulkan *vulkan) {
+void createInstance(Vulkan *vulkan)
+{
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
@@ -11,16 +12,12 @@ void createInstance(Vulkan *vulkan) {
     printf("\033[32m-----> Success Created Window\033[0m\n");
 
     uint32_t glfwExtensionCount;
-    const char **glfwExtensions =
-        glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+    const char **glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
     uint32_t extensionCount;
-    vulkan->result =
-        vkEnumerateInstanceExtensionProperties(NULL, &extensionCount, NULL);
+    vulkan->result = vkEnumerateInstanceExtensionProperties(NULL, &extensionCount, NULL);
     assert(vulkan->result == VK_SUCCESS);
-    VkExtensionProperties *extensionProperties =
-        malloc(sizeof(*extensionProperties) * extensionCount);
-    vulkan->result = vkEnumerateInstanceExtensionProperties(
-							    NULL, &extensionCount, extensionProperties);
+    VkExtensionProperties *extensionProperties = malloc(sizeof(*extensionProperties) * extensionCount);
+    vulkan->result = vkEnumerateInstanceExtensionProperties(NULL, &extensionCount, extensionProperties);
     assert(vulkan->result == VK_SUCCESS);
 
     uint32_t supportedCount = 0;
@@ -36,20 +33,17 @@ void createInstance(Vulkan *vulkan) {
         .engineVersion = VK_MAKE_VERSION(1, 0, 0),
         .apiVersion = VK_API_VERSION_1_4,
     };
-    VkInstanceCreateInfo instanceInfo = {
-        .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-        .pNext = NULL,
-	.flags = 0,
-  	.pApplicationInfo = &appInfo,
-	.enabledExtensionCount = glfwExtensionCount,
-	.ppEnabledExtensionNames = glfwExtensions};
+    VkInstanceCreateInfo instanceInfo = {.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+                                         .pNext = NULL,
+                                         .flags = 0,
+                                         .pApplicationInfo = &appInfo,
+                                         .enabledExtensionCount = glfwExtensionCount,
+                                         .ppEnabledExtensionNames = glfwExtensions};
 
     vulkan->result = vkCreateInstance(&instanceInfo, NULL, &vulkan->instance);
     assert(vulkan->result == VK_SUCCESS);
     printf("\033[32m-----> Success Created Instance\033[0m\n");
-    vulkan->result = glfwCreateWindowSurface(vulkan->instance, vulkan->window, NULL,
-                                             &vulkan->surface);
+    vulkan->result = glfwCreateWindowSurface(vulkan->instance, vulkan->window, NULL, &vulkan->surface);
     assert(vulkan->result == VK_SUCCESS);
     free(extensionProperties);
 }
-

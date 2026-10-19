@@ -14,6 +14,7 @@ set(VULKAN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vendor/vulkan/x86_64")
 add_library(renderCore SHARED
   src/dynamic.c
   src/instance.c
+  src/describeSetLayout.c
   src/physicalDevice.c
   src/device.c
   src/swapChain.c

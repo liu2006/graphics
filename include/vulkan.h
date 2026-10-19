@@ -2,58 +2,55 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <assert.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
 
 #define FLIGHT_FRAMES 2
 
-#define DETERMINE_MSAA_SAMPLE(proprties)\
-({\
-    VkSampleCountFlags _samples = properties.limits.framebufferColorSampleCounts &\
-	properties.limits.framebufferDepthSampleCounts;\
-    VkSampleCountFlagBits _result;\
-    if (_samples & VK_SAMPLE_COUNT_64_BIT)\
-	_result = VK_SAMPLE_COUNT_64_BIT;\
-    else if (_samples & VK_SAMPLE_COUNT_32_BIT)\
-	_result = VK_SAMPLE_COUNT_32_BIT;\
-    else if (_samples & VK_SAMPLE_COUNT_16_BIT)\
-	_result = VK_SAMPLE_COUNT_16_BIT;\
-    else if (_samples & VK_SAMPLE_COUNT_8_BIT)\
-	_result = VK_SAMPLE_COUNT_8_BIT;\
-    else if (_samples & VK_SAMPLE_COUNT_4_BIT)\
-	_result = VK_SAMPLE_COUNT_4_BIT;\
-    else if (_samples & VK_SAMPLE_COUNT_2_BIT)\
-	_result = VK_SAMPLE_COUNT_2_BIT;\
-    else\
-	_result = VK_SAMPLE_COUNT_1_BIT;\
-    _result;\
-})\
+#define DETERMINE_MSAA_SAMPLE(proprties)                                                                                               \
+    ({                                                                                                                                 \
+        VkSampleCountFlags _samples = properties.limits.framebufferColorSampleCounts & properties.limits.framebufferDepthSampleCounts; \
+        VkSampleCountFlagBits _result;                                                                                                 \
+        if (_samples & VK_SAMPLE_COUNT_64_BIT)                                                                                         \
+            _result = VK_SAMPLE_COUNT_64_BIT;                                                                                          \
+        else if (_samples & VK_SAMPLE_COUNT_32_BIT)                                                                                    \
+            _result = VK_SAMPLE_COUNT_32_BIT;                                                                                          \
+        else if (_samples & VK_SAMPLE_COUNT_16_BIT)                                                                                    \
+            _result = VK_SAMPLE_COUNT_16_BIT;                                                                                          \
+        else if (_samples & VK_SAMPLE_COUNT_8_BIT)                                                                                     \
+            _result = VK_SAMPLE_COUNT_8_BIT;                                                                                           \
+        else if (_samples & VK_SAMPLE_COUNT_4_BIT)                                                                                     \
+            _result = VK_SAMPLE_COUNT_4_BIT;                                                                                           \
+        else if (_samples & VK_SAMPLE_COUNT_2_BIT)                                                                                     \
+            _result = VK_SAMPLE_COUNT_2_BIT;                                                                                           \
+        else                                                                                                                           \
+            _result = VK_SAMPLE_COUNT_1_BIT;                                                                                           \
+        _result;                                                                                                                       \
+    })
 
-#define CHECK_EXTENSIONS(requiredExtensionCount, requiredExtensions, extensionCount, extensionProperties, supportedCount)\
-do {\
-    for (uint32_t i = 0; i < requiredExtensionCount; i++) {\
-	for (uint32_t j = 0; j < extensionCount; j++) {\
-            if (strcmp(requiredExtensions[i],\
-                       extensionProperties[j].extensionName) == 0) {\
-		supportedCount++;\
-		break;\
-            } else\
-		continue;\
-	}\
-    }\
-} while (0)
+#define CHECK_EXTENSIONS(requiredExtensionCount, requiredExtensions, extensionCount, extensionProperties, supportedCount) \
+    do {                                                                                                                  \
+        for (uint32_t i = 0; i < requiredExtensionCount; i++) {                                                           \
+            for (uint32_t j = 0; j < extensionCount; j++) {                                                               \
+                if (strcmp(requiredExtensions[i], extensionProperties[j].extensionName) == 0) {                           \
+                    supportedCount++;                                                                                     \
+                    break;                                                                                                \
+                } else                                                                                                    \
+                    continue;                                                                                             \
+            }                                                                                                             \
+        }                                                                                                                 \
+    } while (0)
 
-#define APPEND_VECTOR(vector, value)\
-do {\
-    if (vector.count >= vector.capacity) {\
-	vector.capacity =\
-            vector.capacity ? vector.capacity * 2 : 1;\
-	vector.items = realloc(vector.items, vector.capacity * sizeof(*vector.items));\
-    }\
-    vector.items[vector.count++] = value;\
-} while(0)\
+#define APPEND_VECTOR(vector, value)                                                       \
+    do {                                                                                   \
+        if (vector.count >= vector.capacity) {                                             \
+            vector.capacity = vector.capacity ? vector.capacity * 2 : 1;                   \
+            vector.items = realloc(vector.items, vector.capacity * sizeof(*vector.items)); \
+        }                                                                                  \
+        vector.items[vector.count++] = value;                                              \
+    } while (0)
 
 typedef struct {
     float pos[2];
@@ -86,11 +83,10 @@ typedef struct {
     float model[4][4];
     float view[4][4];
     float proj[4][4];
-} ubo;
-
+} uniformBufferObject;
 
 typedef struct {
-    ubo *items;
+    uniformBufferObject *items;
     size_t count;
     size_t capacity;
 } uniformBufferResources;
@@ -121,8 +117,10 @@ typedef struct {
     uint32_t *spirvBuffer;
     VkViewport viewport;
     VkRect2D scissor;
+    VkDescriptorSetLayout descriptorLayout;
+    VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
-    Vertices vertices; 
+    Vertices vertices;
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
     Indices indices;
@@ -145,6 +143,7 @@ void createInstance(Vulkan *vulkan);
 void createPhysicalDevice(Vulkan *vulkan);
 void createDevice(Vulkan *vulkan);
 void createSwapChain(Vulkan *vulkan);
+void createDescriptorSetLayout(Vulkan *vulkan);
 void createPipeline(Vulkan *vulkan);
 void createCommandBuffer(Vulkan *vulkan);
 void recordCommandBuffer(Vulkan *vulkan);

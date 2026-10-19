@@ -1,135 +1,107 @@
 #include "vulkan.h"
 #include "vulkan/vulkan_core.h"
 
-void createIndexBuffer(Vulkan *vulkan) {
+void createIndexBuffer(Vulkan *vulkan)
+{
     VkBuffer stagingBuffer;
     VkDeviceMemory stagingBufferMemory;
-    VkBufferCreateInfo stagingBufferInfo = {
-	.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-	.pNext = NULL,
-	.flags = 0,
-	.size = sizeof(*vulkan->indices.items) * vulkan->indices.count,
-	.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-	.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-	.queueFamilyIndexCount = 0,
-	.pQueueFamilyIndices = NULL
-    };
-    vulkan->result = vkCreateBuffer(vulkan->device, &stagingBufferInfo, NULL,
-                                    &stagingBuffer);
+    VkBufferCreateInfo stagingBufferInfo = {.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                                            .pNext = NULL,
+                                            .flags = 0,
+                                            .size = sizeof(*vulkan->indices.items) * vulkan->indices.count,
+                                            .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                                            .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+                                            .queueFamilyIndexCount = 0,
+                                            .pQueueFamilyIndices = NULL};
+    vulkan->result = vkCreateBuffer(vulkan->device, &stagingBufferInfo, NULL, &stagingBuffer);
     assert(vulkan->result == VK_SUCCESS);
 
     VkMemoryRequirements memoryRequirements;
-    vkGetBufferMemoryRequirements(vulkan->device, stagingBuffer,
-                                  &memoryRequirements);
+    vkGetBufferMemoryRequirements(vulkan->device, stagingBuffer, &memoryRequirements);
 
     VkPhysicalDeviceMemoryProperties memoryProperties;
     vkGetPhysicalDeviceMemoryProperties(vulkan->physicalDevice, &memoryProperties);
 
     uint32_t memoryTypeIndex;
     for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++) {
-      if (!(memoryRequirements.memoryTypeBits & (1 << i)))
-          continue;
-      if (!(memoryProperties.memoryTypes[i].propertyFlags &
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT))
-          continue;
-      if (!(memoryProperties.memoryTypes[i].propertyFlags &
-            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
-          continue;
-      memoryTypeIndex = i;
-      break;
+        if (!(memoryRequirements.memoryTypeBits & (1 << i)))
+            continue;
+        if (!(memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT))
+            continue;
+        if (!(memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+            continue;
+        memoryTypeIndex = i;
+        break;
     }
-    VkMemoryAllocateInfo allocateInfo = {
-        .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-        .pNext = NULL,
-        .allocationSize = memoryRequirements.size,
-        .memoryTypeIndex = memoryTypeIndex};
-    vulkan->result = vkAllocateMemory(vulkan->device, &allocateInfo, NULL,
-                                      &stagingBufferMemory);
+    VkMemoryAllocateInfo allocateInfo = {.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+                                         .pNext = NULL,
+                                         .allocationSize = memoryRequirements.size,
+                                         .memoryTypeIndex = memoryTypeIndex};
+    vulkan->result = vkAllocateMemory(vulkan->device, &allocateInfo, NULL, &stagingBufferMemory);
     assert(vulkan->result == VK_SUCCESS);
-    vulkan->result = vkBindBufferMemory(vulkan->device, stagingBuffer,
-                                        stagingBufferMemory, 0);
+    vulkan->result = vkBindBufferMemory(vulkan->device, stagingBuffer, stagingBufferMemory, 0);
     assert(vulkan->result == VK_SUCCESS);
 
     void *data;
-    vulkan->result = vkMapMemory(vulkan->device, stagingBufferMemory, 0,
-                                 memoryRequirements.size, 0, &data);
+    vulkan->result = vkMapMemory(vulkan->device, stagingBufferMemory, 0, memoryRequirements.size, 0, &data);
     assert(vulkan->result == VK_SUCCESS);
     memcpy(data, vulkan->indices.items, stagingBufferInfo.size);
     vkUnmapMemory(vulkan->device, stagingBufferMemory);
 
-    VkBufferCreateInfo indexBufferInfo = {
-	.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-	.pNext = NULL,
-	.flags = 0,
-	.size = sizeof(*vulkan->indices.items) * vulkan->indices.count,
-	.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-	.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-	.queueFamilyIndexCount = 0,
-	.pQueueFamilyIndices = NULL
-    };
-    vulkan->result = vkCreateBuffer(vulkan->device, &indexBufferInfo, NULL,
-                                    &vulkan->indexBuffer);
+    VkBufferCreateInfo indexBufferInfo = {.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                                          .pNext = NULL,
+                                          .flags = 0,
+                                          .size = sizeof(*vulkan->indices.items) * vulkan->indices.count,
+                                          .usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                                          .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+                                          .queueFamilyIndexCount = 0,
+                                          .pQueueFamilyIndices = NULL};
+    vulkan->result = vkCreateBuffer(vulkan->device, &indexBufferInfo, NULL, &vulkan->indexBuffer);
     assert(vulkan->result == VK_SUCCESS);
 
-    vkGetBufferMemoryRequirements(vulkan->device, vulkan->indexBuffer,
-                                  &memoryRequirements);
-    
+    vkGetBufferMemoryRequirements(vulkan->device, vulkan->indexBuffer, &memoryRequirements);
+
     vkGetPhysicalDeviceMemoryProperties(vulkan->physicalDevice, &memoryProperties);
 
     for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++) {
-	if (!(memoryRequirements.memoryTypeBits & (1 << i)))
+        if (!(memoryRequirements.memoryTypeBits & (1 << i)))
             continue;
-	if (!(memoryProperties.memoryTypes[i].propertyFlags &
-              VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+        if (!(memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
             continue;
-	memoryTypeIndex = i;
-	break;
+        memoryTypeIndex = i;
+        break;
     }
-    allocateInfo = (VkMemoryAllocateInfo){
-        .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-        .pNext = NULL,
-        .allocationSize = memoryRequirements.size,
-        .memoryTypeIndex = memoryTypeIndex};
-    vulkan->result = vkAllocateMemory(vulkan->device, &allocateInfo, NULL,
-                                      &vulkan->indexBufferMemory);
+    allocateInfo = (VkMemoryAllocateInfo){.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+                                          .pNext = NULL,
+                                          .allocationSize = memoryRequirements.size,
+                                          .memoryTypeIndex = memoryTypeIndex};
+    vulkan->result = vkAllocateMemory(vulkan->device, &allocateInfo, NULL, &vulkan->indexBufferMemory);
     assert(vulkan->result == VK_SUCCESS);
-    vulkan->result = vkBindBufferMemory(vulkan->device, vulkan->indexBuffer,
-                                        vulkan->indexBufferMemory, 0);
+    vulkan->result = vkBindBufferMemory(vulkan->device, vulkan->indexBuffer, vulkan->indexBufferMemory, 0);
     assert(vulkan->result == VK_SUCCESS);
 
     VkCommandBuffer commandCopyBuffer;
-    VkCommandBufferAllocateInfo commandBufferAllocateInfo = {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-        .pNext = NULL,
-        .commandPool = vulkan->commandPool,
-        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-        .commandBufferCount = 1};
-    vulkan->result = vkAllocateCommandBuffers(
-					      vulkan->device, &commandBufferAllocateInfo, &commandCopyBuffer);
+    VkCommandBufferAllocateInfo commandBufferAllocateInfo = {.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+                                                             .pNext = NULL,
+                                                             .commandPool = vulkan->commandPool,
+                                                             .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+                                                             .commandBufferCount = 1};
+    vulkan->result = vkAllocateCommandBuffers(vulkan->device, &commandBufferAllocateInfo, &commandCopyBuffer);
     assert(vulkan->result == VK_SUCCESS);
-    VkCommandBufferBeginInfo beginInfo = {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-        .pNext = NULL,
-        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-        .pInheritanceInfo = NULL};
+    VkCommandBufferBeginInfo beginInfo = {.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+                                          .pNext = NULL,
+                                          .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+                                          .pInheritanceInfo = NULL};
     vulkan->result = vkBeginCommandBuffer(commandCopyBuffer, &beginInfo);
     assert(vulkan->result == VK_SUCCESS);
-    VkBufferCopy bufferCopy = {
-	.srcOffset = 0,
-	.dstOffset = 0,
-	.size = stagingBufferInfo.size
-    };
-    vkCmdCopyBuffer(commandCopyBuffer, stagingBuffer, vulkan->indexBuffer, 1,
-                    &bufferCopy);
+    VkBufferCopy bufferCopy = {.srcOffset = 0, .dstOffset = 0, .size = stagingBufferInfo.size};
+    vkCmdCopyBuffer(commandCopyBuffer, stagingBuffer, vulkan->indexBuffer, 1, &bufferCopy);
     vulkan->result = vkEndCommandBuffer(commandCopyBuffer);
     assert(vulkan->result == VK_SUCCESS);
 
     VkFence fence;
-    VkFenceCreateInfo fenceInfo = {.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
-                                   .pNext = NULL,
-                                   .flags = 0};
-    vulkan->result = vkCreateFence(vulkan->device, &fenceInfo, NULL,
-                                   &fence);
+    VkFenceCreateInfo fenceInfo = {.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO, .pNext = NULL, .flags = 0};
+    vulkan->result = vkCreateFence(vulkan->device, &fenceInfo, NULL, &fence);
     assert(vulkan->result == VK_SUCCESS);
     VkSubmitInfo submitInfo = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
                                .pNext = NULL,
@@ -140,10 +112,8 @@ void createIndexBuffer(Vulkan *vulkan) {
                                .pCommandBuffers = &commandCopyBuffer,
                                .signalSemaphoreCount = 0,
                                .pSignalSemaphores = NULL};
-    vulkan->result =
-        vkQueueSubmit(vulkan->graphicsQueue, 1, &submitInfo, fence);
+    vulkan->result = vkQueueSubmit(vulkan->graphicsQueue, 1, &submitInfo, fence);
     assert(vulkan->result == VK_SUCCESS);
-    vulkan->result =
-        vkWaitForFences(vulkan->device, 1, &fence, VK_TRUE, UINT64_MAX);
+    vulkan->result = vkWaitForFences(vulkan->device, 1, &fence, VK_TRUE, UINT64_MAX);
     assert(vulkan->result == VK_SUCCESS);
 }
