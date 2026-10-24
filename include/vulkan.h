@@ -9,8 +9,11 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <math.h>
 
 #define FLIGHT_FRAMES 2
+#define PI 3.14159265359
+
 
 #define DETERMINE_MSAA_SAMPLE(proprties)                                                                                               \
     ({                                                                                                                                 \
