@@ -66,7 +66,7 @@ void createVertexBuffer(Vulkan *vulkan)
 
     vkGetBufferMemoryRequirements(vulkan->device, vulkan->vertexBuffer, &memoryRequirements);
     vkGetPhysicalDeviceMemoryProperties(vulkan->physicalDevice, &memoryProperties);
-    uint32_t memoryTypeIndex;
+    uint32_t memoryTypeIndex = 0;
     for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++) {
         if (!(memoryRequirements.memoryTypeBits & (1 << i)))
             continue;

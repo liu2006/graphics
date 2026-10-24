@@ -23,7 +23,8 @@ ConstantBuffer<UniformBuffer> ubo;
 VSOutput vertexMain(VSInput input) {
     VSOutput output;
     output.color = input.color;
-    output.position = mul(ubo.object, mul(ubo.view, mul(ubo.model, float4(input.position, 0.0, 1.0))));
+    output.position = float4(input.position, 0.0, 1.0);
+    // output.position = mul(ubo.object, mul(ubo.view, mul(ubo.model, float4(input.position, 0.0, 1.0))));
     return output;
 }
 

@@ -2,7 +2,7 @@
 
 void createPipeline(Vulkan *vulkan)
 {
-    FILE *file = fopen("share/shaders/slang.spv", "rb");
+    FILE *file = fopen("shaders/slang.spv", "rb");
     assert(file != NULL);
     printf("\033[32m-----> Success Opened Shader File\033[0m\n");
     fseek(file, 0, SEEK_END);
@@ -137,7 +137,18 @@ void createPipeline(Vulkan *vulkan)
                                                                 .pAttachments = &colorBlendAttachment,
                                                                 .blendConstants = {0.0f, 0.0f, 0.0f, 0.0f}};
 
-    
+    VkDescriptorSetLayoutBinding uboLayoutBinding = {.binding = 1,
+                                                     .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                                                     .descriptorCount = 1,
+                                                     .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+                                                     .pImmutableSamplers = NULL};
+    VkDescriptorSetLayoutCreateInfo layoutInfo = {.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+                                                  .pNext = NULL,
+                                                  .flags = 0,
+                                                  .bindingCount = 0,
+                                                  .pBindings = &uboLayoutBinding};
+    vkCreateDescriptorSetLayout(vulkan->device, &layoutInfo, NULL, &vulkan->descriptorLayout);
+
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = {.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
                                                      .pNext = NULL,
                                                      .flags = 0,

@@ -6,6 +6,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <stdbool.h>
+
 
 #define FLIGHT_FRAMES 2
 
@@ -143,7 +146,6 @@ void createInstance(Vulkan *vulkan);
 void createPhysicalDevice(Vulkan *vulkan);
 void createDevice(Vulkan *vulkan);
 void createSwapChain(Vulkan *vulkan);
-void createDescriptorSetLayout(Vulkan *vulkan);
 void createPipeline(Vulkan *vulkan);
 void createCommandBuffer(Vulkan *vulkan);
 void recordCommandBuffer(Vulkan *vulkan);
@@ -151,3 +153,4 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 void createVertexBuffer(Vulkan *vulkan);
 void createIndexBuffer(Vulkan *vulkan);
 void createUniformBuffers(Vulkan *vulkan);
+void updateUniformBuffer(Vulkan *vulkan);

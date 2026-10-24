@@ -8,7 +8,6 @@ int main(void)
     createPhysicalDevice(vulkan);
     createDevice(vulkan);
     createSwapChain(vulkan);
-    createDescriptorSetLayout(vulkan);
     createPipeline(vulkan);
     createCommandBuffer(vulkan);
     createVertexBuffer(vulkan);
@@ -28,6 +27,8 @@ int main(void)
         recordCommandBuffer(vulkan);
 
         VkPipelineStageFlagBits waitDstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+        updateUniformBuffer(vulkan);
         VkSubmitInfo submitInfo = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
                                    .pNext = NULL,
                                    .waitSemaphoreCount = 1,
