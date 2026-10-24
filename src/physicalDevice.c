@@ -12,9 +12,9 @@ void createPhysicalDevice(Vulkan *vulkan)
     printf("\033[32m-----> Success Found Physical Device\033[0m\n");
     VkPhysicalDeviceFeatures features;
     VkPhysicalDeviceProperties properties;
-    for (uint32_t i = 0; i < physicalDeviceCount; i++) {
+    for (size_t i = 0; i < physicalDeviceCount; i++) {
         vkGetPhysicalDeviceProperties(physicalDevices[i], &properties);
-        printf("\033[35m- [ %u ] Supported Physical Device: %s\033[0m\n", i + 1, properties.deviceName);
+        printf("\033[35m- [ %u ] Supported Physical Device: %s\033[0m\n", (uint32_t)i + 1, properties.deviceName);
         if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
             vulkan->physicalDevice = physicalDevices[i];
             break;
@@ -32,8 +32,8 @@ void createPhysicalDevice(Vulkan *vulkan)
     vkGetPhysicalDeviceQueueFamilyProperties(vulkan->physicalDevice, &queueFamilyPropertyCount, NULL);
     VkQueueFamilyProperties *queueFamilyProperties = malloc(sizeof(*queueFamilyProperties) * queueFamilyPropertyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(vulkan->physicalDevice, &queueFamilyPropertyCount, queueFamilyProperties);
-    bool supportedGraphics;
-    for (uint32_t i = 0; i < queueFamilyPropertyCount; i++) {
+    bool supportedGraphics = false;
+    for (size_t i = 0; i < queueFamilyPropertyCount; i++) {
         if (queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             supportedGraphics = true;
             vulkan->graphicsIndex = i;

@@ -11,7 +11,7 @@ void updateUniformBuffer(Vulkan *vulkan)
 {
     static struct timespec startTime;
     static bool initialize = false;
-    if (!initialize){
+    if (!initialize) {
         clock_gettime(CLOCK_MONOTONIC, &startTime);
         initialize = true;
     }
@@ -19,6 +19,7 @@ void updateUniformBuffer(Vulkan *vulkan)
     clock_gettime(CLOCK_MONOTONIC, &currentTime);
 
     float time = (float)(currentTime.tv_sec - startTime.tv_sec) + (float)(currentTime.tv_nsec - startTime.tv_nsec) / 1e9f;
+    uniformBufferObject ubo = {0};    
+    
     printf("%.3f\n", time);
 }
-

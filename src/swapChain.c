@@ -15,7 +15,7 @@ void createSwapChain(Vulkan *vulkan)
     assert(vulkan->result == VK_SUCCESS);
 
     vulkan->formatIndex = 0;
-    for (uint32_t i = 0; i < surfaceFormatCount; i++) {
+    for (size_t i = 0; i < surfaceFormatCount; i++) {
         if (vulkan->surfaceFormats[i].format == VK_FORMAT_B8G8R8A8_SRGB &&
             vulkan->surfaceFormats[i].colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
             vulkan->formatIndex = i;
@@ -24,7 +24,7 @@ void createSwapChain(Vulkan *vulkan)
             vulkan->formatIndex = i;
         }
     }
-    uint32_t presentModeCount;
+    uint32_t presentModeCount = 0;
     vulkan->result = vkGetPhysicalDeviceSurfacePresentModesKHR(vulkan->physicalDevice, vulkan->surface, &presentModeCount, NULL);
     assert(vulkan->result == VK_SUCCESS);
     VkPresentModeKHR *presentModes = malloc(sizeof(*presentModes) * presentModeCount);
@@ -33,8 +33,8 @@ void createSwapChain(Vulkan *vulkan)
     assert(vulkan->result == VK_SUCCESS);
 
     VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
-    bool supportedMailbox;
-    for (uint32_t i = 0; i < presentModeCount; i++) {
+    bool supportedMailbox = false;
+    for (size_t i = 0; i < presentModeCount; i++) {
         if (presentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
             presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
             supportedMailbox = true;
@@ -94,7 +94,7 @@ void createSwapChain(Vulkan *vulkan)
         .subresourceRange = {
             .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .baseMipLevel = 0, .levelCount = 1, .baseArrayLayer = 0, .layerCount = 1}};
 
-    for (uint32_t i = 0; i < vulkan->imageCount; i++) {
+    for (size_t i = 0; i < vulkan->imageCount; i++) {
         imageViewCreateInfo.image = vulkan->swapChainImages[i];
         vulkan->result = vkCreateImageView(vulkan->device, &imageViewCreateInfo, NULL, &vulkan->imageViews[i]);
         assert(vulkan->result == VK_SUCCESS);
@@ -125,8 +125,8 @@ void createSwapChain(Vulkan *vulkan)
 
     VkPhysicalDeviceMemoryProperties memoryProperties;
     vkGetPhysicalDeviceMemoryProperties(vulkan->physicalDevice, &memoryProperties);
-    uint32_t memoryTypeIndex;
-    for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++) {
+    uint32_t memoryTypeIndex = 0;
+    for (size_t i = 0; i < memoryProperties.memoryTypeCount; i++) {
         if (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) {
             memoryTypeIndex = i;
             break;

@@ -22,8 +22,8 @@ void createIndexBuffer(Vulkan *vulkan)
     VkPhysicalDeviceMemoryProperties memoryProperties;
     vkGetPhysicalDeviceMemoryProperties(vulkan->physicalDevice, &memoryProperties);
 
-    uint32_t memoryTypeIndex;
-    for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++) {
+    uint32_t memoryTypeIndex = 0;
+    for (size_t i = 0; i < memoryProperties.memoryTypeCount; i++) {
         if (!(memoryRequirements.memoryTypeBits & (1 << i)))
             continue;
         if (!(memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT))
@@ -63,7 +63,7 @@ void createIndexBuffer(Vulkan *vulkan)
 
     vkGetPhysicalDeviceMemoryProperties(vulkan->physicalDevice, &memoryProperties);
 
-    for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++) {
+    for (size_t i = 0; i < memoryProperties.memoryTypeCount; i++) {
         if (!(memoryRequirements.memoryTypeBits & (1 << i)))
             continue;
         if (!(memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
